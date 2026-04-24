@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          SITE_URL: https://shop.pommerconsulting.de
+          GATEWAY_URL: https://mcp.pommerconsulting.de
+
+      - name: Smoke test
+        run: |
+          for slug in itil servicenow ot fnt searxng standortiq; do
+            test -f dist/products/$slug/index.html || { echo "MISSING: $slug"; exit 1; }
+          done
+
+      - name: Deploy to Spark via rsync
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -rlptDv --delete --exclude='.git'
+          path: dist/
+          remote_path: /var/www/mcp-shop/
+          remote_host: ${{ secrets.DEPLOY_HOST }}
+          remote_user: ${{ secrets.DEPLOY_USER }}
+          remote_key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Reload nginx
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: sudo nginx -s reload

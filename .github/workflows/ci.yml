@@ -34,6 +34,19 @@ jobs:
           test -f dist/products/index.html || { echo "MISSING: /products"; exit 1; }
           echo "All pages built successfully"
 
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: E2E tests (Playwright)
+        run: npx playwright test --project=chromium
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist

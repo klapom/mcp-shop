@@ -162,17 +162,20 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
                 </div>
               )}
               <a
-                href={`/checkout/trial?product=${product.slug}`}
+                href={`${gatewayUrl}/auth/trial-start?product=${product.slug}&redirect_uri=${encodeURIComponent("https://shop.pommerconsulting.de/checkout/success")}`}
                 class="w-full block text-center py-3 px-4 rounded-md bg-[#005F73] text-white font-semibold text-sm hover:bg-[#003845] transition-colors mb-3"
               >
                 Trial starten
               </a>
-              <a
-                href={`/checkout/buy?product=${product.slug}`}
-                class="w-full block text-center py-3 px-4 rounded-md border border-[#005F73] text-[#005F73] font-semibold text-sm hover:bg-[#005F73]/5 transition-colors"
+              <button
+                data-product={product.slug}
+                data-gateway={gatewayUrl}
+                id="buy-btn"
+                class="w-full block text-center py-3 px-4 rounded-md border border-[#005F73] text-[#005F73] font-semibold text-sm hover:bg-[#005F73]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Jetzt kaufen
-              </a>
+              </button>
+              <p id="buy-error" class="text-xs text-red-600 mt-2 hidden"></p>
             </>
           )}
 
@@ -186,3 +189,49 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
 
   <Footer />
 </Layout>
+
+<script>
+  const btn = document.getElementById('buy-btn') as HTMLButtonElement | null;
+  const errEl = document.getElementById('buy-error') as HTMLElement | null;
+
+  btn?.addEventListener('click', async () => {
+    if (!btn || !errEl) return;
+    btn.disabled = true;
+    btn.textContent = 'Wird vorbereitet…';
+    errEl.classList.add('hidden');
+
+    const productSlug = btn.dataset.product ?? '';
+    const gatewayUrl = btn.dataset.gateway ?? '';
+
+    try {
+      const res = await fetch(`${gatewayUrl}/billing/checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          product_slug: productSlug,
+          success_url: `${location.origin}/checkout/success?product=${productSlug}`,
+          cancel_url: location.href,
+        }),
+      });
+
+      if (res.status === 401) {
+        // Not authenticated — redirect to trial/auth flow first
+        location.href = `${gatewayUrl}/auth/trial-start?product=${encodeURIComponent(productSlug)}&intent=buy&redirect_uri=${encodeURIComponent(location.href)}`;
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(`Fehler ${res.status}`);
+      }
+
+      const data = await res.json();
+      location.href = data.checkout_url;
+    } catch (err) {
+      errEl.textContent = err instanceof Error ? err.message : 'Gateway nicht erreichbar.';
+      errEl.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Jetzt kaufen';
+    }
+  });
+</script>

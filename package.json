@@ -19,5 +19,9 @@
     "js-yaml": "^4.1.1",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0"
   }
 }
