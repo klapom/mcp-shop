@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          SITE_URL: https://shop.pommerconsulting.de
+          GATEWAY_URL: https://mcp.pommerconsulting.de
+
+      - name: Smoke test — all product pages built
+        run: |
+          for slug in itil servicenow ot fnt searxng standortiq; do
+            test -f dist/products/$slug/index.html || { echo "MISSING: $slug"; exit 1; }
+          done
+          test -f dist/index.html || { echo "MISSING: index"; exit 1; }
+          test -f dist/products/index.html || { echo "MISSING: /products"; exit 1; }
+          echo "All pages built successfully"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7

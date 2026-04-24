@@ -27,12 +27,11 @@ interface ProductsYaml {
   products: Product[];
 }
 
+// Default: bundled data/products.yaml (CI-safe, no external repo needed)
+// Override via PRODUCTS_YAML_PATH env var for local dev with live mcp-platform checkout
 const PRODUCTS_YAML_PATH =
   process.env.PRODUCTS_YAML_PATH ??
-  resolve(
-    process.cwd(),
-    "../mcp-platform/docs/inventory/products.yaml"
-  );
+  resolve(process.cwd(), "data/products.yaml");
 
 let _cache: Product[] | null = null;
 

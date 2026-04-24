@@ -1,0 +1,136 @@
+# Produkt-Katalog — Source of Truth (ADR-017)
+#
+# Verkaufbare SKUs. V1 = eins pro Namespace, keine Bundles.
+# Bundles werden später additiv angelegt, ohne dass bestehende IDs/Slugs geändert werden.
+#
+# Wird von `gateway admin catalog sync <path>` eingelesen.
+#
+# Schema:
+#   id:                    uuid4 — einmal generiert, NIE ändern (Stripe-Kopplung)
+#   slug:                  URL-safe Kurzname, einmalig, neutral (= Namespace-ID V1)
+#   display_name:          Shop-Titel — wird von Sales/Marketing-Persona gepflegt, initial Platzhalter
+#   scopes:                list[{namespace, scope}] — Scope-Paare, M:N
+#   trial_days:            int | null — Trial-Dauer ab first-use
+#   stripe_product_id:     Stripe-Anbindung, gesetzt vom Shop-Sync
+#   status:                "active" | "deprecated" | "draft"
+#
+# Marketing-Block (Sales/Marketing-Persona-gepflegt, bis dahin leer):
+#   marketing:
+#     tagline:             1 Satz, unter 80 Zeichen
+#     description_long:    Markdown-Langtext für Product-Detail-Page
+#     use_cases:           list[str]
+#     icon_url:             URL (CDN/static)
+#     screenshots:         list[{url, caption}]
+#     pricing_note:        optionaler Zusatz unter Preis
+#     category:            frei gepflegt
+#
+# Build-Tooling (Sprint 9): fehlende marketing-Felder → Placeholder oder "coming-soon"-Liste.
+
+products:
+  - id: "0194f4a0-0000-0000-0000-000000000001"
+    slug: "itil"
+    display_name: "ITIL Knowledge"          # TODO Sales/Marketing
+    scopes:
+      - namespace: itil
+        scope: read
+    trial_days: 14
+    stripe_product_id: null
+    status: draft
+    marketing:
+      tagline: ""
+      description_long: ""
+      use_cases: []
+      icon_url: ""
+      screenshots: []
+      pricing_note: ""
+      category: ""
+
+  - id: "0194f4a0-0000-0000-0000-000000000002"
+    slug: "servicenow"
+    display_name: "ServiceNow Knowledge"    # TODO Sales/Marketing
+    scopes:
+      - namespace: servicenow
+        scope: read
+    trial_days: 14
+    stripe_product_id: null
+    status: draft
+    marketing:
+      tagline: ""
+      description_long: ""
+      use_cases: []
+      icon_url: ""
+      screenshots: []
+      pricing_note: ""
+      category: ""
+
+  - id: "0194f4a0-0000-0000-0000-000000000003"
+    slug: "ot"
+    display_name: "OMNITRACKER Knowledge"   # TODO Sales/Marketing
+    scopes:
+      - namespace: ot
+        scope: read
+    trial_days: 14
+    stripe_product_id: null
+    status: draft
+    marketing:
+      tagline: ""
+      description_long: ""
+      use_cases: []
+      icon_url: ""
+      screenshots: []
+      pricing_note: ""
+      category: ""
+
+  - id: "0194f4a0-0000-0000-0000-000000000004"
+    slug: "fnt"
+    display_name: "FNT Command Knowledge"   # TODO Sales/Marketing
+    scopes:
+      - namespace: fnt
+        scope: read
+    trial_days: 14
+    stripe_product_id: null
+    status: draft
+    marketing:
+      tagline: ""
+      description_long: ""
+      use_cases: []
+      icon_url: ""
+      screenshots: []
+      pricing_note: ""
+      category: ""
+
+  - id: "0194f4a0-0000-0000-0000-000000000005"
+    slug: "searxng"
+    display_name: "Web Search"              # TODO Sales/Marketing
+    scopes:
+      - namespace: searxng
+        scope: read
+    trial_days: 14
+    stripe_product_id: null
+    status: draft
+    marketing:
+      tagline: ""
+      description_long: ""
+      use_cases: []
+      icon_url: ""
+      screenshots: []
+      pricing_note: ""
+      category: ""
+
+  - id: "0194f4a0-0000-0000-0000-000000000006"
+    slug: "standortiq"
+    display_name: "StandortIQ Marktanalyse" # TODO Sales/Marketing
+    scopes:
+      - namespace: standortiq
+        scope: read
+    trial_days: 7
+    stripe_product_id: null
+    status: draft  # wartet auf Kunden-Feedback + Namespace-Live
+    marketing:
+      tagline: ""
+      description_long: ""
+      use_cases: []
+      icon_url: ""
+      screenshots: []
+      pricing_note: ""
+      category: ""
