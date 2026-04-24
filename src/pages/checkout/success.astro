@@ -1,0 +1,31 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const productSlug = Astro.url.searchParams.get("product") ?? "";
+---
+
+<Layout title="Erfolgreich gestartet">
+  <Header />
+  <main class="flex-1 flex items-center justify-center px-6 py-20">
+    <div class="text-center max-w-md">
+      <div class="w-16 h-16 rounded-full bg-[#005F73]/10 flex items-center justify-center text-[#005F73] text-3xl mx-auto mb-6">
+        ✓
+      </div>
+      <h1 class="text-2xl font-bold text-[#1A1A2E] mb-3">Bereit zum Loslegen</h1>
+      <p class="text-[#6B6B8A] mb-8">
+        Dein Zugang ist aktiviert. Verbinde jetzt deinen MCP-Client mit dem Gateway.
+      </p>
+      <a
+        href="https://docs.pommerconsulting.de/quickstart"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center justify-center px-6 py-3 rounded-md bg-[#005F73] text-white font-semibold hover:bg-[#003845] transition-colors"
+      >
+        Setup-Anleitung lesen →
+      </a>
+    </div>
+  </main>
+  <Footer />
+</Layout>

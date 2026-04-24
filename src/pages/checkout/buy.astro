@@ -1,0 +1,74 @@
+---
+// Feature 9.5: Checkout-Bridge
+// Calls Gateway POST /billing/checkout-session, gets Stripe URL, redirects.
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const productSlug = Astro.url.searchParams.get("product") ?? "";
+const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.de";
+
+let stripeUrl: string | null = null;
+let error: string | null = null;
+
+if (productSlug) {
+  try {
+    const res = await fetch(`${gatewayUrl}/billing/checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        product_slug: productSlug,
+        success_url: `${Astro.url.origin}/checkout/success?product=${productSlug}`,
+        cancel_url: `${Astro.url.origin}/products/${productSlug}`,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      stripeUrl = data.checkout_url;
+    } else if (res.status === 401) {
+      // Not authenticated — send to trial flow first (auth required before purchase)
+      return Astro.redirect(
+        `/checkout/trial?product=${encodeURIComponent(productSlug)}&intent=buy`,
+        302
+      );
+    } else {
+      error = `Checkout-Session konnte nicht erstellt werden (${res.status}).`;
+    }
+  } catch {
+    error = "Gateway nicht erreichbar. Bitte versuche es erneut.";
+  }
+}
+
+if (stripeUrl) {
+  return Astro.redirect(stripeUrl, 302);
+}
+---
+
+<Layout title="Kaufen">
+  <Header />
+  <main class="flex-1 flex items-center justify-center px-6 py-20">
+    <div class="text-center max-w-md">
+      {error ? (
+        <>
+          <p class="text-red-600 font-semibold mb-2">Fehler</p>
+          <p class="text-[#6B6B8A] mb-6">{error}</p>
+          <a
+            href={productSlug ? `/products/${productSlug}` : "/products"}
+            class="text-[#005F73] font-semibold hover:underline"
+          >
+            Zurück zum Produkt
+          </a>
+        </>
+      ) : (
+        <>
+          <p class="text-[#6B6B8A] mb-4">Kein Produkt ausgewählt.</p>
+          <a href="/products" class="text-[#005F73] font-semibold hover:underline">
+            Zurück zur Produktübersicht
+          </a>
+        </>
+      )}
+    </div>
+  </main>
+  <Footer />
+</Layout>

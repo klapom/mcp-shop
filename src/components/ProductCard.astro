@@ -1,0 +1,66 @@
+---
+import type { Product } from '../lib/products';
+import { isMarketingComplete } from '../lib/products';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const hasContent = isMarketingComplete(product.marketing);
+const isDraft = product.status === "draft";
+---
+
+<a
+  href={`/products/${product.slug}`}
+  class="group block bg-white rounded-xl border border-[#E96C00]/10 shadow-sm hover:shadow-md hover:border-[#005F73]/30 transition-all p-6"
+>
+  <div class="flex items-start justify-between mb-4">
+    <div class="flex items-center gap-3">
+      {product.marketing.icon_url ? (
+        <img
+          src={product.marketing.icon_url}
+          alt=""
+          class="w-10 h-10 rounded-lg object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <div class="w-10 h-10 rounded-lg bg-[#005F73]/10 flex items-center justify-center text-[#005F73] font-bold text-lg">
+          {product.display_name.charAt(0)}
+        </div>
+      )}
+      <div>
+        <h2 class="font-bold text-[#1A1A2E] group-hover:text-[#005F73] transition-colors">
+          {product.display_name}
+        </h2>
+        {product.marketing.category && (
+          <span class="text-xs text-[#6B6B8A]">{product.marketing.category}</span>
+        )}
+      </div>
+    </div>
+    {isDraft && (
+      <span class="text-xs px-2 py-1 rounded bg-[#F4F4F8] text-[#6B6B8A]">
+        Demnächst
+      </span>
+    )}
+  </div>
+
+  {hasContent ? (
+    <p class="text-sm text-[#6B6B8A] leading-relaxed mb-4 line-clamp-3">
+      {product.marketing.tagline}
+    </p>
+  ) : (
+    <p class="text-sm text-[#6B6B8A]/60 italic mb-4">
+      Produktbeschreibung in Vorbereitung
+    </p>
+  )}
+
+  <div class="flex items-center justify-between pt-4 border-t border-[#F4F4F8]">
+    <span class="text-xs text-[#6B6B8A]">
+      {product.trial_days ? `${product.trial_days} Tage Trial` : "Kein Trial"}
+    </span>
+    <span class="text-[#005F73] text-sm font-semibold group-hover:text-[#E96C00] transition-colors">
+      Details →
+    </span>
+  </div>
+</a>

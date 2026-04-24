@@ -1,0 +1,30 @@
+---
+// Feature 9.6: Trial-Start-Bridge
+// Redirects to Gateway OAuth DCR flow. The Gateway handles trial grant on first login.
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const productSlug = Astro.url.searchParams.get("product") ?? "";
+const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.de";
+
+// Redirect immediately on server side — page renders only if JS is disabled
+const trialUrl = `${gatewayUrl}/auth/trial-start?product=${encodeURIComponent(productSlug)}&redirect_uri=${encodeURIComponent(Astro.url.origin + "/checkout/success")}`;
+
+if (productSlug) {
+  return Astro.redirect(trialUrl, 302);
+}
+---
+
+<Layout title="Trial starten">
+  <Header />
+  <main class="flex-1 flex items-center justify-center px-6 py-20">
+    <div class="text-center max-w-md">
+      <p class="text-[#6B6B8A] mb-4">Kein Produkt ausgewählt.</p>
+      <a href="/products" class="text-[#005F73] font-semibold hover:underline">
+        Zurück zur Produktübersicht
+      </a>
+    </div>
+  </main>
+  <Footer />
+</Layout>

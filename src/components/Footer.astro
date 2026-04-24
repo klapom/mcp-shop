@@ -1,0 +1,17 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-[#1A1A2E] text-white/60 mt-auto">
+  <div class="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+    <div class="flex items-center gap-3">
+      <img src="/logo-dark-transparent.svg" alt="Pommer Agents" class="h-6 w-auto opacity-60" />
+      <span>© {year} Pommer Consulting</span>
+    </div>
+    <nav class="flex gap-6" aria-label="Footer-Navigation">
+      <a href="/imprint" class="hover:text-white transition-colors">Impressum</a>
+      <a href="/privacy" class="hover:text-white transition-colors">Datenschutz</a>
+      <a href="mailto:kontakt@pommerconsulting.de" class="hover:text-white transition-colors">Kontakt</a>
+    </nav>
+  </div>
+</footer>

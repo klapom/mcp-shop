@@ -1,0 +1,120 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { loadProducts } from '../lib/products';
+
+const allProducts = loadProducts();
+const draftCount = allProducts.filter(p => p.status === "draft").length;
+const totalCount = allProducts.length;
+---
+
+<Layout
+  title="KI-gestützte Knowledge-MCPs für IT-Professionals"
+  description="Pommer Agents verbindet Claude, Copilot und andere KI-Assistenten mit deinen ITSM-Systemen. ITIL, ServiceNow, OMNITRACKER, FNT — per MCP, OAuth-gesichert, sofort einsatzbereit."
+>
+  <Header />
+
+  <main>
+    <!-- Hero -->
+    <section class="bg-[#003845] text-white py-24 px-6">
+      <div class="max-w-4xl mx-auto text-center">
+        <p class="text-[#E96C00] font-semibold text-sm tracking-widest uppercase mb-4">
+          Model Context Protocol · OAuth 2.1 · Enterprise-Ready
+        </p>
+        <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
+          Dein KI-Assistent.<br />
+          Dein Wissen.
+        </h1>
+        <p class="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10">
+          Verbinde Claude, Copilot oder jeden MCP-fähigen Assistenten mit deinen
+          ITSM-Systemen — über ein einziges, gesichertes Gateway.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a
+            href="/products"
+            class="inline-flex items-center justify-center px-8 py-3 rounded-md bg-[#E96C00] text-white font-semibold text-base hover:bg-[#E96C00]/90 transition-colors"
+          >
+            Produkte ansehen →
+          </a>
+          <a
+            href="https://docs.pommerconsulting.de"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center px-8 py-3 rounded-md border border-white/30 text-white font-semibold text-base hover:bg-white/10 transition-colors"
+          >
+            Dokumentation
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature highlights -->
+    <section class="py-20 px-6 bg-[#F4F4F8]">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-bold text-[#1A1A2E] text-center mb-12">
+          Ein Gateway für alle deine ITSM-Systeme
+        </h2>
+        <div class="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: "🔐",
+              title: "OAuth 2.1 gesichert",
+              body: "Jeder Zugriff läuft über RFC-konformes OAuth 2.1 mit PKCE. Kein API-Key-Sharing, kein Shared-Secret-Chaos.",
+            },
+            {
+              icon: "⚡",
+              title: "Sofort einsatzbereit",
+              body: "Eine MCP-URL in Claude Desktop oder Copilot Studio eintragen — alle Tools sind sofort verfügbar, namespaced und dokumentiert.",
+            },
+            {
+              icon: "🧩",
+              title: "Modular & erweiterbar",
+              body: "Buche nur die Knowledge-Quellen, die du brauchst. Neue Namespaces lassen sich additiv hinzufügen, ohne bestehende Clients zu brechen.",
+            },
+          ].map((feature) => (
+            <div class="bg-white rounded-xl p-8 shadow-sm border border-[#E96C00]/10">
+              <div class="text-3xl mb-4">{feature.icon}</div>
+              <h3 class="text-lg font-bold text-[#1A1A2E] mb-2">{feature.title}</h3>
+              <p class="text-[#6B6B8A] text-sm leading-relaxed">{feature.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Compatible clients -->
+    <section class="py-16 px-6 bg-white">
+      <div class="max-w-4xl mx-auto text-center">
+        <p class="text-[#6B6B8A] text-sm font-semibold uppercase tracking-widest mb-6">
+          Kompatibel mit
+        </p>
+        <div class="flex flex-wrap justify-center gap-6 text-[#1A1A2E] font-semibold text-base">
+          {["Claude Desktop", "Claude Cowork", "Copilot Studio (M365)", "MCP Inspector", "Cursor"].map((client) => (
+            <span class="px-4 py-2 rounded-full bg-[#F4F4F8] text-sm">{client}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Products CTA -->
+    <section class="py-20 px-6 bg-[#005F73] text-white">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="text-2xl md:text-3xl font-bold mb-4">
+          {totalCount} Knowledge-Produkte. 14 Tage kostenlos.
+        </h2>
+        <p class="text-white/80 mb-8">
+          Starte mit einem Trial und entscheide danach. Kein Kreditkartenzwang für den Trial.
+        </p>
+        <a
+          href="/products"
+          class="inline-flex items-center justify-center px-8 py-3 rounded-md bg-white text-[#005F73] font-semibold hover:bg-white/90 transition-colors"
+        >
+          Alle Produkte ansehen
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

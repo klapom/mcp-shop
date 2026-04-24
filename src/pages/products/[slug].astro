@@ -1,0 +1,188 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { loadProducts, isMarketingComplete } from '../../lib/products';
+import type { Product } from '../../lib/products';
+
+export function getStaticPaths() {
+  const products = loadProducts();
+  return products.map((p) => ({
+    params: { slug: p.slug },
+    props: { product: p },
+  }));
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const hasContent = isMarketingComplete(product.marketing);
+const isDraft = product.status === "draft";
+
+const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.de";
+---
+
+<Layout
+  title={product.display_name}
+  description={product.marketing.tagline || `${product.display_name} — Knowledge-MCP von Pommer Agents`}
+>
+  <Header />
+
+  <main>
+    <!-- Product hero -->
+    <section class="bg-[#003845] text-white py-16 px-6">
+      <div class="max-w-4xl mx-auto">
+        <nav class="text-sm text-white/50 mb-6">
+          <a href="/products" class="hover:text-white transition-colors">Produkte</a>
+          <span class="mx-2">/</span>
+          <span class="text-white/80">{product.display_name}</span>
+        </nav>
+
+        <div class="flex items-start gap-6">
+          {product.marketing.icon_url ? (
+            <img
+              src={product.marketing.icon_url}
+              alt=""
+              class="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+            />
+          ) : (
+            <div class="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+              {product.display_name.charAt(0)}
+            </div>
+          )}
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <h1 class="text-3xl md:text-4xl font-bold">{product.display_name}</h1>
+              {isDraft && (
+                <span class="text-xs px-2 py-1 rounded bg-white/10 text-white/60">Demnächst</span>
+              )}
+            </div>
+            {hasContent ? (
+              <p class="text-xl text-white/80 max-w-2xl">{product.marketing.tagline}</p>
+            ) : (
+              <p class="text-base text-white/40 italic">Produktbeschreibung in Vorbereitung</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="max-w-4xl mx-auto px-6 py-12 grid md:grid-cols-3 gap-12">
+      <!-- Main content -->
+      <div class="md:col-span-2 space-y-10">
+
+        <!-- Description -->
+        {hasContent ? (
+          <section>
+            <h2 class="text-xl font-bold text-[#1A1A2E] mb-4">Über dieses Produkt</h2>
+            <div class="prose prose-sm text-[#6B6B8A] max-w-none">
+              <p>{product.marketing.description_long}</p>
+            </div>
+          </section>
+        ) : (
+          <section class="bg-[#F4F4F8] rounded-xl p-8 text-center">
+            <p class="text-[#6B6B8A] font-medium mb-1">Inhalt in Vorbereitung</p>
+            <p class="text-sm text-[#6B6B8A]/70">
+              Detaillierte Produktinformationen werden in Kürze verfügbar sein.
+            </p>
+          </section>
+        )}
+
+        <!-- Use cases -->
+        {product.marketing.use_cases.length > 0 && (
+          <section>
+            <h2 class="text-xl font-bold text-[#1A1A2E] mb-4">Anwendungsfälle</h2>
+            <ul class="space-y-3">
+              {product.marketing.use_cases.map((uc) => (
+                <li class="flex items-start gap-3 text-sm text-[#6B6B8A]">
+                  <span class="text-[#005F73] mt-0.5 flex-shrink-0">✓</span>
+                  {uc}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <!-- MCP namespace info -->
+        <section>
+          <h2 class="text-xl font-bold text-[#1A1A2E] mb-4">Technische Details</h2>
+          <dl class="space-y-3 text-sm">
+            <div class="flex gap-3">
+              <dt class="text-[#6B6B8A] w-32 flex-shrink-0">MCP-Namespace</dt>
+              <dd class="font-mono text-[#005F73] bg-[#005F73]/5 px-2 py-0.5 rounded">
+                {product.slug}/
+              </dd>
+            </div>
+            <div class="flex gap-3">
+              <dt class="text-[#6B6B8A] w-32 flex-shrink-0">Gateway-URL</dt>
+              <dd class="font-mono text-xs text-[#1A1A2E] break-all">
+                {gatewayUrl}/mcp/
+              </dd>
+            </div>
+            <div class="flex gap-3">
+              <dt class="text-[#6B6B8A] w-32 flex-shrink-0">Transport</dt>
+              <dd class="text-[#1A1A2E]">Streamable HTTP (MCP 2025-03-26)</dd>
+            </div>
+            <div class="flex gap-3">
+              <dt class="text-[#6B6B8A] w-32 flex-shrink-0">Auth</dt>
+              <dd class="text-[#1A1A2E]">OAuth 2.1 + PKCE (RFC 9068 JWT)</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <!-- Sidebar: CTA + pricing -->
+      <aside class="space-y-4">
+        <div class="bg-white rounded-xl border border-[#E96C00]/10 shadow-sm p-6 sticky top-6">
+          {isDraft ? (
+            <>
+              <p class="text-sm font-semibold text-[#1A1A2E] mb-1">Demnächst verfügbar</p>
+              <p class="text-xs text-[#6B6B8A] mb-6">
+                Dieses Produkt befindet sich noch in der Vorbereitung.
+              </p>
+              <button
+                disabled
+                class="w-full py-3 px-4 rounded-md bg-[#F4F4F8] text-[#6B6B8A] font-semibold text-sm cursor-not-allowed"
+              >
+                Noch nicht verfügbar
+              </button>
+            </>
+          ) : (
+            <>
+              {product.marketing.pricing_note && (
+                <p class="text-xs text-[#6B6B8A] mb-2">{product.marketing.pricing_note}</p>
+              )}
+              {product.trial_days && (
+                <div class="flex items-center gap-2 mb-4">
+                  <span class="text-xs bg-[#005F73]/10 text-[#005F73] px-2 py-1 rounded font-semibold">
+                    {product.trial_days} Tage kostenlos
+                  </span>
+                </div>
+              )}
+              <a
+                href={`/checkout/trial?product=${product.slug}`}
+                class="w-full block text-center py-3 px-4 rounded-md bg-[#005F73] text-white font-semibold text-sm hover:bg-[#003845] transition-colors mb-3"
+              >
+                Trial starten
+              </a>
+              <a
+                href={`/checkout/buy?product=${product.slug}`}
+                class="w-full block text-center py-3 px-4 rounded-md border border-[#005F73] text-[#005F73] font-semibold text-sm hover:bg-[#005F73]/5 transition-colors"
+              >
+                Jetzt kaufen
+              </a>
+            </>
+          )}
+
+          <p class="text-xs text-[#6B6B8A] mt-4 text-center">
+            Monatlich kündbar · Keine versteckten Kosten
+          </p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

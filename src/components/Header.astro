@@ -1,0 +1,40 @@
+---
+const navLinks = [
+  { href: "/products", label: "Produkte" },
+  { href: "https://docs.pommerconsulting.de", label: "Dokumentation", external: true },
+];
+---
+
+<header class="bg-[#003845] text-white">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <a href="/" aria-label="Pommer Agents — Startseite">
+      <img
+        src="/logo-dark-transparent.svg"
+        alt="Pommer Agents"
+        height="32"
+        class="h-8 w-auto"
+        loading="eager"
+      />
+    </a>
+
+    <nav class="hidden md:flex items-center gap-8" aria-label="Hauptnavigation">
+      {navLinks.map((link) => (
+        <a
+          href={link.href}
+          target={link.external ? "_blank" : undefined}
+          rel={link.external ? "noopener noreferrer" : undefined}
+          class="text-sm font-medium text-white/80 hover:text-white transition-colors"
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+
+    <a
+      href="/products"
+      class="hidden md:inline-flex items-center px-4 py-2 rounded-md bg-[#E96C00] text-white text-sm font-semibold hover:bg-[#E96C00]/90 transition-colors"
+    >
+      Produkte ansehen
+    </a>
+  </div>
+</header>

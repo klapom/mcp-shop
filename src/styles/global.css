@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  /* Pommer Brand Colors */
+  --color-petrol: #005F73;
+  --color-petrol-dark: #003845;
+  --color-orange: #E96C00;
+  --color-anthrazit: #1A1A2E;
+  --color-grau: #6B6B8A;
+  --color-neutral: #F4F4F8;
+
+  /* Fonts */
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi/Satoshi-Variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi/Satoshi-VariableItalic.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-anthrazit);
+  background-color: var(--color-neutral);
+  -webkit-font-smoothing: antialiased;
+}
