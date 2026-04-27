@@ -1,0 +1,123 @@
+# Namespace-Metadaten für die Doku.
+# Tools selbst kommen aus data/tools.json (live von den Upstream-MCPs gezogen).
+# Anzahl Tools wird vom Loader berechnet — nicht hier hardcoden.
+
+namespaces:
+  - id: itil
+    display_name: ITIL Knowledge
+    short: RAG über ITIL v3, v4 und v5
+    long: |
+      ITIL-Wissensbasis mit Volltext + Graph-Erweiterung. Versteht Practices,
+      Rollen, Konzepte und ihre Beziehungen über alle drei Versionen. Ideal
+      für Migrations-Beratung, Practice-Vergleiche und Versions-übergreifende
+      Recherche. Antworten werden aus mehreren Quellen synthetisiert und
+      verlinken auf die zugrundeliegenden Chunks.
+    icon: "📘"
+    accent: petrol
+    sources:
+      - ITIL v3 / v4 / v5 Handbücher
+      - Practice-Mappings (Neo4j-Konzeptgraph)
+      - Migrationspfade + Zertifizierungs-Transitions
+    typical_questions:
+      - Welche neuen Practices gibt es in v4 vs. v3?
+      - Wie hängt Change Enablement mit Service Configuration Management zusammen?
+      - Erstelle einen Migrationsleitfaden v3 → v4 für Incident Management.
+
+  - id: servicenow
+    display_name: ServiceNow Knowledge
+    short: Plattform + ITSM + Skripting
+    long: |
+      ServiceNow-Wissensbasis mit Tabellen-Schema, REST/GlideRecord-API,
+      Flow Designer, ITSM-Prozessdoku und Customizing-Best-Practices.
+      Perfekt für Devs und Admins, die schnell zwischen Tabellenstruktur,
+      Skripting-Patterns und Prozessdoku wechseln müssen.
+    icon: "🔧"
+    accent: petrol
+    sources:
+      - Tabellen-/Feld-Dokumentation
+      - GlideRecord & REST-API-Reference
+      - Flow Designer + Process-Docs
+      - ITIL-Mappings auf ServiceNow-Module
+    typical_questions:
+      - Welche Felder hat das incident-Table und wie heißt die State-Column?
+      - Wie schreibe ich einen GlideRecord-Query mit OR-Klausel?
+      - Welche Tabellen extends cmdb_ci?
+
+  - id: ot
+    display_name: OMNITRACKER Knowledge
+    short: COM-API + XOO/XOP-Schemas
+    long: |
+      OMNITRACKER COM-API Reference + XSD-Schemas für XOO/XOP.
+      Deterministischer Lookup von Objekten und Memberns plus Graph-
+      Traversal über Objekt-Hierarchien. Nützlich für OT-Entwickler die
+      gegen die COM-API integrieren oder Custom-Workflows bauen.
+    icon: "⚙️"
+    accent: petrol
+    sources:
+      - OT COM-API Reference (alle Versionen)
+      - XOO/XOP-XSD-Schemas
+      - OT-Training-Material + Consulting-Notes
+    typical_questions:
+      - Wie navigiere ich von OtSession zu OtUserField?
+      - Welcher Typ wird von OtRequestFolder.MakeFilter zurückgegeben?
+      - Zeige mir das XSD für ModifyObjectAction.
+
+  - id: fnt
+    display_name: FNT Command Knowledge
+    short: Inventory + Topologie
+    long: |
+      FNT Command Wissensbasis — Entitäten, Attribute und Relationen
+      aus dem FNT-Handbuch + API-Reference. Graph-Traversal über die
+      Entity-Beziehungen, semantische Suche über Doku.
+    icon: "🗄️"
+    accent: petrol
+    sources:
+      - FNT Command Handbook
+      - FNT API-Reference
+      - Entity-Graph (Neo4j)
+    typical_questions:
+      - Welche Entitäten hängen an Cabinet?
+      - Wie modelliere ich Layer-2-Verbindungen in FNT?
+      - Was sind die Pflicht-Attribute von Building?
+
+  - id: searxng
+    display_name: Web Search
+    short: Privacy-preserving meta search
+    long: |
+      Privacy-preserving Web-, News- und Bildsuche via SearXNG.
+      Aggregiert mehrere Suchmaschinen ohne User-Tracking, liefert
+      Markdown-Ergebnisse mit Quellen und Snippets. Praktisch wenn
+      ein Tool im Workflow doch mal ins offene Web greifen muss.
+    icon: "🔎"
+    accent: orange
+    sources:
+      - SearXNG (eigene Instanz)
+      - Mehrere Upstream-Engines, gewichtet
+    typical_questions:
+      - Suche nach "Anthropic Claude 4.7 release notes"
+      - Aktuelle News zu "EU AI Act compliance"
+      - Bildsuche für "Pommer Consulting Logo"
+
+  - id: standortiq
+    display_name: StandortIQ Marktanalyse
+    short: Standortbewertung + Market-Reports
+    long: |
+      Datengetriebene Standortbewertung für deutsche Gemeinden — verbindet
+      Geocoding, Wettbewerber-Listen, demografische Indikatoren, Tourismus-
+      Statistiken, Kaufkraft, Bauleitplanung und mehr. Generiert Word/Excel-
+      Reports automatisiert. Hauptanwender sind Gastronomie, Hotellerie und
+      stationärer Einzelhandel.
+    icon: "📊"
+    accent: orange
+    sources:
+      - Destatis GENESIS-Online (Tourismus, Einkommensteuer)
+      - Wegweiser Kommune (Demografie)
+      - Eurostat (NUTS-3)
+      - Bayern Bauleitplanung + BORIS (Boden-Richtwerte)
+      - DWD Wetter, OpenStreetMap, Google Places, BKG VG250
+      - Zensus 2022 (Leerstand)
+    typical_questions:
+      - Erstelle einen Markt-Report für ein Café in Würzburg.
+      - Welche Wettbewerber gibt es im Umkreis 5km um Berliner Platz 1, 80331 München?
+      - Wie ist die Kaufkraft im Landkreis Bayreuth?
+      - Welche Tourismus-Übernachtungen verzeichnet Bamberg monatlich?

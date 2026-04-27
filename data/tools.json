@@ -1,0 +1,1183 @@
+{
+  "itil": [
+    {
+      "name": "ask_itil",
+      "description": "Beantwortet ITIL-Fragen per RAG (Vektor + Graph + LLM) mit Quellen.\n\n    `version_filter` engt auf v3, v4 oder v5 ein.",
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "version_filter": {
+            "anyOf": [
+              {
+                "enum": [
+                  "v3",
+                  "v4",
+                  "v5"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Version Filter"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "ask_itilArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "compare_versions",
+      "description": "Vergleicht ITIL-Versionen.\n\n    Zeigt Migrationspfad, Namensänderungen und inhaltliche Unterschiede.\n    `practice` engt auf eine Practice ein (z.B. `'change-enablement'`).",
+      "input_schema": {
+        "properties": {
+          "from_version": {
+            "enum": [
+              "v3",
+              "v4",
+              "v5"
+            ],
+            "title": "From Version",
+            "type": "string"
+          },
+          "to_version": {
+            "enum": [
+              "v3",
+              "v4",
+              "v5"
+            ],
+            "title": "To Version",
+            "type": "string"
+          },
+          "practice": {
+            "default": "",
+            "title": "Practice",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_version",
+          "to_version"
+        ],
+        "title": "compare_versionsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "graph_traverse",
+      "description": "Navigiert den ITIL-Konzeptgraph in Neo4j.\n\n    Findet Beziehungen zwischen Practices, Rollen, Konzepten und Versionen.\n    Beispiele: `'Welche Rollen hat AI Governance?'`, `'Welche Practices sind in v5 neu?'`.",
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "version_filter": {
+            "anyOf": [
+              {
+                "enum": [
+                  "v3",
+                  "v4",
+                  "v5"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Version Filter"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "graph_traverseArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "migration_guide",
+      "description": "Liefert einen strukturierten Migrationsleitfaden zwischen ITIL-Versionen.\n\n    Phasen, Zeitplan, Quick Wins, Practice-spezifische Pfade, Zertifizierungs-Transition.",
+      "input_schema": {
+        "properties": {
+          "from_version": {
+            "enum": [
+              "v3",
+              "v4",
+              "v5"
+            ],
+            "title": "From Version",
+            "type": "string"
+          },
+          "to_version": {
+            "enum": [
+              "v3",
+              "v4",
+              "v5"
+            ],
+            "title": "To Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_version",
+          "to_version"
+        ],
+        "title": "migration_guideArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "search_itil",
+      "description": "Durchsucht die ITIL-Wissensbasis ohne LLM-Synthese.\n\n    Liefert rohe Chunks mit Scores. `version_filter` engt auf v3/v4/v5 ein,\n    `practice_filter` auf eine Practice (z.B. `'incident-management'`).",
+      "input_schema": {
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "version_filter": {
+            "anyOf": [
+              {
+                "enum": [
+                  "v3",
+                  "v4",
+                  "v5"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Version Filter"
+          },
+          "practice_filter": {
+            "default": "",
+            "title": "Practice Filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "search_itilArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "servicenow": [
+    {
+      "name": "ask_sn_knowledge",
+      "description": "Beantwortet ServiceNow-/ITIL-/ITSM-Fragen per RAG (Vector + Graph + LLM) mit Quellen.\n\n    `context_hint` engt die Suche ein (z.B. `'ITSM'`, `'CMDB'`, `'scripting'`,\n    `'change management'`, `'flow designer'`).",
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "context_hint": {
+            "default": "",
+            "title": "Context Hint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "ask_sn_knowledgeArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "graph_traverse",
+      "description": "Navigiert die Tabellen- und Prozess-Relationen in Neo4j.\n\n    Findet Beziehungen zwischen Tabellen (Referenzen, Extensions) und\n    Prozessen. Beispiele: `'How does incident relate to task?'`,\n    `'What tables extend cmdb_ci?'`. `start_node` optional — schränkt auf\n    einen Startknoten ein (z.B. `'incident'`, `'Change Management'`).",
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "start_node": {
+            "default": "",
+            "title": "Start Node",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "graph_traverseArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "lookup_table",
+      "description": "Deterministischer Lookup einer ServiceNow-Tabelle oder eines Feldes.\n\n    Beispiele: `table_name='incident', field_name='state'` oder nur\n    `table_name='change_request'` für den Tabellen-Überblick.",
+      "input_schema": {
+        "properties": {
+          "table_name": {
+            "title": "Table Name",
+            "type": "string"
+          },
+          "field_name": {
+            "default": "",
+            "title": "Field Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "table_name"
+        ],
+        "title": "lookup_tableArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "search_sn_docs",
+      "description": "Durchsucht die ServiceNow-Dokumentation ohne LLM-Synthese.\n\n    Liefert rohe Chunks mit Scores. `source_filter` engt auf eine Quelle ein:\n    `'process'` (ITIL-Prozessdocs), `'training'` (Schulungen),\n    `'api_reference'` (REST/GlideRecord), `'handbook'`, `'customizing'`.",
+      "input_schema": {
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "source_filter": {
+            "anyOf": [
+              {
+                "enum": [
+                  "process",
+                  "training",
+                  "api_reference",
+                  "handbook",
+                  "customizing"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Filter"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "search_sn_docsArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "ot": [
+    {
+      "name": "ask_ot_mcp",
+      "description": "Ask a question about OMNITRACKER COM API. Returns RAG-synthesized answer with sources.\n\n    `context_hint` optionally steers retrieval (e.g., an object name like 'OtSession').",
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "context_hint": {
+            "default": "",
+            "title": "Context Hint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "ask_ot_mcpArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "graph_traverse",
+      "description": "Traverse the COM object hierarchy graph. Finds relationships between objects: what methods return which types, which collections contain which items, how to navigate. Examples: 'How do I get from OtSession to OtUserField?', 'What does OtRequestFolder.MakeFilter return?'. `start_object` optionally narrows the search.",
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "start_object": {
+            "default": "",
+            "title": "Start Object",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "graph_traverseArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "lookup_api",
+      "description": "Look up a specific COM API object or member by name. Deterministic file lookup (no vector search). Examples: `object_name='OtSession'`, `member_name='GetRequestByUniqueId'`; or just `object_name='OtFilter'` for the object overview page.",
+      "input_schema": {
+        "properties": {
+          "object_name": {
+            "title": "Object Name",
+            "type": "string"
+          },
+          "member_name": {
+            "default": "",
+            "title": "Member Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object_name"
+        ],
+        "title": "lookup_apiArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "lookup_schema",
+      "description": "Look up OT XML schema (XSD) type definitions. Returns the formal schema for XOO/XOP types like `ActionType`, `FieldType`, `FolderType`, `RuleType`, `ModifyObjectAction`. Useful when building or validating XOO/XOP XML.",
+      "input_schema": {
+        "properties": {
+          "type_name": {
+            "title": "Type Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type_name"
+        ],
+        "title": "lookup_schemaArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "search_docs",
+      "description": "Search the OT documentation without LLM synthesis. Returns raw chunks with scores. `source_filter` narrows to: 'api', 'training', 'consulting', 'memory'.",
+      "input_schema": {
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "source_filter": {
+            "default": "",
+            "title": "Source Filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "search_docsArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "fnt": [
+    {
+      "name": "ask_fnt",
+      "description": "Ask a question about FNT Command. Returns RAG-synthesized answer with sources.\n\n    `context_hint` optionally steers retrieval (e.g., an entity name).",
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "context_hint": {
+            "default": "",
+            "title": "Context Hint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "ask_fntArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "graph_traverse",
+      "description": "Traverse the FNT entity graph to answer structural / relationship questions.\n\n    If ``start_entity`` is empty, the traversal auto-picks an entry point from\n    ``question``. Returns JSON with a context bundle for downstream synthesis.",
+      "input_schema": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "start_entity": {
+            "default": "",
+            "title": "Start Entity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "graph_traverseArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "lookup_entity",
+      "description": "Look up a specific FNT entity by name. Returns JSON with attributes,\n    relations, and parent/child entities (Neo4j-sourced).",
+      "input_schema": {
+        "properties": {
+          "entity_name": {
+            "title": "Entity Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity_name"
+        ],
+        "title": "lookup_entityArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "search_docs",
+      "description": "Search FNT docs by semantic similarity. Returns top-N chunks as JSON.\n\n    `source_filter`: ``\"api\"`` (API reference only), ``\"handbook\"`` (handbook only),\n    or empty string for both.\n    `limit`: 1..50 (default 10).",
+      "input_schema": {
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "source_filter": {
+            "default": "",
+            "title": "Source Filter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "search_docsArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "searxng": [
+    {
+      "name": "image_search",
+      "description": "Search for images via SearXNG.\n\n    Returns a Markdown list with thumbnail/image URLs, source hostname and\n    resolution per hit.",
+      "input_schema": {
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "language": {
+            "default": "auto",
+            "title": "Language",
+            "type": "string"
+          },
+          "time_range": {
+            "anyOf": [
+              {
+                "enum": [
+                  "day",
+                  "week",
+                  "month",
+                  "year"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Time Range"
+          },
+          "max_results": {
+            "default": 8,
+            "title": "Max Results",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "image_searchArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "news_search",
+      "description": "Search recent news articles via SearXNG.\n\n    Returns a Markdown list with title, URL, published date, snippet content\n    and source engines per hit.",
+      "input_schema": {
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "language": {
+            "default": "auto",
+            "title": "Language",
+            "type": "string"
+          },
+          "time_range": {
+            "default": "week",
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ],
+            "title": "Time Range",
+            "type": "string"
+          },
+          "max_results": {
+            "default": 10,
+            "title": "Max Results",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "news_searchArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "web_search",
+      "description": "Search the web via SearXNG (privacy-preserving meta search).\n\n    Returns a Markdown-formatted result list with ranked hits from multiple\n    upstream engines, plus any instant-answer infoboxes.",
+      "input_schema": {
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "category": {
+            "default": "general",
+            "enum": [
+              "general",
+              "news",
+              "images",
+              "videos",
+              "science",
+              "files",
+              "social media"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "language": {
+            "default": "auto",
+            "title": "Language",
+            "type": "string"
+          },
+          "time_range": {
+            "anyOf": [
+              {
+                "enum": [
+                  "day",
+                  "week",
+                  "month",
+                  "year"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Time Range"
+          },
+          "max_results": {
+            "default": 10,
+            "title": "Max Results",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "web_searchArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "standortiq": [
+    {
+      "name": "geocode_address",
+      "description": "Geocode a German address → coordinates, Bundesland, AGS, Gemeindename.",
+      "input_schema": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "title": "geocode_addressArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_competitors",
+      "description": "Search hotels, restaurants, attractions via Google Places.",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "radius_m": {
+            "default": 5000,
+            "title": "Radius M",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "get_competitorsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_pois",
+      "description": "Find all POIs from OpenStreetMap via Overpass.",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "radius_m": {
+            "default": 3000,
+            "title": "Radius M",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "get_poisArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_isochrones",
+      "description": "Calculate 15/30/60 min isochrones for car and pedestrian.",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "get_isochronesArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_tourism_stats",
+      "description": "Tourism statistics (GENESIS 45412-01-03-4) for a district.",
+      "input_schema": {
+        "properties": {
+          "rs_key": {
+            "title": "Rs Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rs_key"
+        ],
+        "title": "get_tourism_statsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_monthly_tourism",
+      "description": "Monthly tourism (Bayern GENESIS 45511-001z) — only for Bayern (AGS starts with 09).",
+      "input_schema": {
+        "properties": {
+          "ags": {
+            "title": "Ags",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ags"
+        ],
+        "title": "get_monthly_tourismArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_kaufkraft",
+      "description": "Purchasing power proxy via income tax (GENESIS 73111-01-01-5).",
+      "input_schema": {
+        "properties": {
+          "rs_key": {
+            "title": "Rs Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rs_key"
+        ],
+        "title": "get_kaufkraftArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_demographics",
+      "description": "Demographic indicators (Wegweiser Kommune) for a Gemeinde.",
+      "input_schema": {
+        "properties": {
+          "gemeinde_name": {
+            "title": "Gemeinde Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "gemeinde_name"
+        ],
+        "title": "get_demographicsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_eurostat_tourism",
+      "description": "Eurostat overnight stays at NUTS-3 level.",
+      "input_schema": {
+        "properties": {
+          "nuts3": {
+            "title": "Nuts3",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nuts3"
+        ],
+        "title": "get_eurostat_tourismArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_climate",
+      "description": "Weather data and climate overview (DWD via Bright Sky).",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "get_climateArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_transit_access",
+      "description": "Public transit access (DB StaDa + GTFS/Overpass).",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "radius_km": {
+            "default": 30,
+            "title": "Radius Km",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "get_transit_accessArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_admin_boundaries",
+      "description": "Administrative boundaries (BKG VG250).",
+      "input_schema": {
+        "properties": {
+          "ags": {
+            "title": "Ags",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ags"
+        ],
+        "title": "get_admin_boundariesArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_landuse",
+      "description": "Land use data (Bayern ATKIS).",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "radius_m": {
+            "default": 2000,
+            "title": "Radius M",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "get_landuseArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_baurecht",
+      "description": "Zoning/building law data (Bayern Bauleitplanung WMS).",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "get_baurechtArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_bodenrichtwert",
+      "description": "Land values (Bayern BORIS WMS).",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "get_bodenrichtwertArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_vacancy_data",
+      "description": "Vacancy data (Zensus 2022).",
+      "input_schema": {
+        "properties": {
+          "ags": {
+            "title": "Ags",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ags"
+        ],
+        "title": "get_vacancy_dataArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "collect_all",
+      "description": "Collect ALL data sources in parallel via asyncio.gather().\n\n    This is the main performance advantage over V1: instead of 15 sequential\n    API calls taking ~60s, we fire them all concurrently for ~8-10s total.\n\n    Returns aggregated JSON with all source results.",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "address": {
+            "default": "",
+            "title": "Address",
+            "type": "string"
+          },
+          "category": {
+            "default": "vollhotel",
+            "title": "Category",
+            "type": "string"
+          },
+          "rs_key": {
+            "default": "",
+            "title": "Rs Key",
+            "type": "string"
+          },
+          "ags": {
+            "default": "",
+            "title": "Ags",
+            "type": "string"
+          },
+          "nuts3": {
+            "default": "",
+            "title": "Nuts3",
+            "type": "string"
+          },
+          "gemeinde_name": {
+            "default": "",
+            "title": "Gemeinde Name",
+            "type": "string"
+          },
+          "theme": {
+            "default": "",
+            "title": "Theme",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "collect_allArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_competitors",
+      "description": "Find competitors, create session, return HTML selection URL.",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "radius_m": {
+            "default": 5000,
+            "title": "Radius M",
+            "type": "integer"
+          },
+          "category": {
+            "default": "vollhotel",
+            "title": "Category",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "list_competitorsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "generate_analysis",
+      "description": "Generate category-specific Word + Excel report.",
+      "input_schema": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "address": {
+            "default": "",
+            "title": "Address",
+            "type": "string"
+          },
+          "theme": {
+            "default": "",
+            "title": "Theme",
+            "type": "string"
+          },
+          "session_id": {
+            "default": "",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "prepend_market_overview": {
+            "default": false,
+            "title": "Prepend Market Overview",
+            "type": "boolean"
+          },
+          "rs_key": {
+            "default": "",
+            "title": "Rs Key",
+            "type": "string"
+          },
+          "ags": {
+            "default": "",
+            "title": "Ags",
+            "type": "string"
+          },
+          "nuts3": {
+            "default": "",
+            "title": "Nuts3",
+            "type": "string"
+          },
+          "gemeinde_name": {
+            "default": "",
+            "title": "Gemeinde Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lat",
+          "lng",
+          "category"
+        ],
+        "title": "generate_analysisArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "generate_market_overview_tool",
+      "description": "Generate national market overview .docx.",
+      "input_schema": {
+        "properties": {
+          "force": {
+            "default": false,
+            "title": "Force",
+            "type": "boolean"
+          }
+        },
+        "title": "generate_market_overview_toolArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "refresh_narrative_cache",
+      "description": "Refresh narrative cache — invalidate matching entries.",
+      "input_schema": {
+        "properties": {
+          "gemeinde": {
+            "default": "",
+            "title": "Gemeinde",
+            "type": "string"
+          },
+          "category": {
+            "default": "",
+            "title": "Category",
+            "type": "string"
+          }
+        },
+        "title": "refresh_narrative_cacheArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_narrative_cache_stats",
+      "description": "Return narrative cache statistics.",
+      "input_schema": {
+        "properties": {},
+        "title": "get_narrative_cache_statsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "clear_narrative_cache",
+      "description": "Clear entire narrative cache.",
+      "input_schema": {
+        "properties": {},
+        "title": "clear_narrative_cacheArguments",
+        "type": "object"
+      }
+    }
+  ]
+}

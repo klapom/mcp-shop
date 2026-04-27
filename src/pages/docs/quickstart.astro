@@ -1,0 +1,203 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.de";
+---
+
+<Layout title="Quickstart" description="In 5 Minuten von Trial-Aktivierung zum ersten Tool-Call.">
+  <Header />
+
+  <main>
+    <section class="bg-[#003845] text-white py-12 px-6">
+      <div class="max-w-4xl mx-auto">
+        <nav class="text-sm text-white/50 mb-6">
+          <a href="/docs" class="hover:text-white transition-colors">Dokumentation</a>
+          <span class="mx-2">/</span>
+          <span class="text-white/80">Quickstart</span>
+        </nav>
+        <h1 class="text-3xl md:text-4xl font-bold mb-3">Quickstart</h1>
+        <p class="text-lg text-white/80 max-w-2xl">
+          Vom Trial-Start bis zum ersten Tool-Call in Claude Desktop, Claude Cowork
+          oder Copilot Studio — in 5 Minuten.
+        </p>
+      </div>
+    </section>
+
+    <div class="max-w-4xl mx-auto px-6 py-10 space-y-12">
+      <!-- Step 1 -->
+      <section>
+        <div class="flex items-start gap-4 mb-3">
+          <div class="w-8 h-8 rounded-full bg-[#005F73] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
+          <h2 class="text-xl font-bold text-[#1A1A2E]">Trial starten</h2>
+        </div>
+        <div class="ml-12 text-sm text-[#6B6B8A] space-y-3">
+          <p>
+            Auf <a href="/products" class="text-[#005F73] hover:text-[#E96C00] font-semibold">/products</a>
+            ein Produkt auswählen, „Trial starten" klicken. Login mit Google oder Microsoft 365.
+            Nach dem ersten Login wird dein Tenant automatisch provisioniert und alle
+            verfügbaren Trial-Produkte sind aktiv.
+          </p>
+          <p class="text-xs">
+            Trial-Dauer pro Produkt: 14 Tage ab erster Nutzung. Kein Kreditkartenzwang.
+          </p>
+        </div>
+      </section>
+
+      <!-- Step 2 -->
+      <section>
+        <div class="flex items-start gap-4 mb-3">
+          <div class="w-8 h-8 rounded-full bg-[#005F73] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
+          <h2 class="text-xl font-bold text-[#1A1A2E]">Client einrichten</h2>
+        </div>
+        <div class="ml-12 space-y-6">
+          <!-- Claude Desktop -->
+          <div>
+            <h3 class="font-semibold text-[#1A1A2E] mb-2">Claude Desktop (macOS / Windows)</h3>
+            <p class="text-sm text-[#6B6B8A] mb-2">
+              Settings → Developer → Edit Config. Folgenden Block in
+              <code class="font-mono text-xs bg-[#005F73]/5 text-[#005F73] px-1 rounded">claude_desktop_config.json</code> einfügen:
+            </p>
+            <pre class="bg-[#1A1A2E] text-white text-xs p-4 rounded-lg overflow-x-auto"><code>{`{
+  "mcpServers": {
+    "pommer-agents": {
+      "url": "${gatewayUrl}/mcp",
+      "transport": "streamable-http"
+    }
+  }
+}`}</code></pre>
+            <p class="text-xs text-[#6B6B8A] mt-2">
+              Beim ersten Tool-Call öffnet Desktop einen Browser-Tab für den OAuth-Login.
+              Nach erfolgreichem Login werden alle deine Trial-Tools sichtbar.
+            </p>
+          </div>
+
+          <!-- Claude Cowork -->
+          <div>
+            <h3 class="font-semibold text-[#1A1A2E] mb-2">Claude Cowork (Web)</h3>
+            <p class="text-sm text-[#6B6B8A] mb-2">
+              Settings → Connectors → Custom Connector → Add. URL:
+            </p>
+            <pre class="bg-[#1A1A2E] text-white text-xs p-4 rounded-lg overflow-x-auto"><code>{`${gatewayUrl}/mcp`}</code></pre>
+            <p class="text-xs text-[#6B6B8A] mt-2">
+              Cowork führt dich direkt durch den OAuth-Flow. DCR (Dynamic Client Registration)
+              passiert automatisch — keine Client-ID/Secret nötig.
+            </p>
+          </div>
+
+          <!-- Copilot Studio -->
+          <div>
+            <h3 class="font-semibold text-[#1A1A2E] mb-2">Microsoft Copilot Studio (M365 E7)</h3>
+            <p class="text-sm text-[#6B6B8A] mb-2">
+              Tools → MCP Servers → Add Server. Manifest-URL:
+            </p>
+            <pre class="bg-[#1A1A2E] text-white text-xs p-4 rounded-lg overflow-x-auto"><code>{`${gatewayUrl}/.well-known/oauth-protected-resource`}</code></pre>
+            <p class="text-xs text-[#6B6B8A] mt-2">
+              Copilot Studio nutzt das RFC-9728-Metadaten-Endpoint für automatische
+              Auth-Konfiguration.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 3 -->
+      <section>
+        <div class="flex items-start gap-4 mb-3">
+          <div class="w-8 h-8 rounded-full bg-[#005F73] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
+          <h2 class="text-xl font-bold text-[#1A1A2E]">Erstes Tool aufrufen</h2>
+        </div>
+        <div class="ml-12 text-sm text-[#6B6B8A] space-y-3">
+          <p>Im Chat-Fenster einfach fragen — der Client wählt das passende Tool automatisch:</p>
+          <div class="bg-[#F4F4F8] rounded-lg p-4 space-y-2 text-sm">
+            <p class="text-[#1A1A2E]"><strong>Du:</strong> „Was sind die neuen Practices in ITIL v4 vs. v3?"</p>
+            <p class="text-[#005F73]">→ Client wählt <code class="font-mono text-xs bg-white px-1 rounded">itil_compare_versions</code></p>
+          </div>
+          <div class="bg-[#F4F4F8] rounded-lg p-4 space-y-2 text-sm">
+            <p class="text-[#1A1A2E]"><strong>Du:</strong> „Wie heißt die State-Column im incident-Table?"</p>
+            <p class="text-[#005F73]">→ Client wählt <code class="font-mono text-xs bg-white px-1 rounded">servicenow_lookup_table</code></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tool-Naming Reference -->
+      <section>
+        <div class="flex items-start gap-4 mb-3">
+          <div class="w-8 h-8 rounded-full bg-[#005F73] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">4</div>
+          <h2 class="text-xl font-bold text-[#1A1A2E]">Tool-Naming verstehen</h2>
+        </div>
+        <div class="ml-12 text-sm text-[#6B6B8A] space-y-3">
+          <p>
+            Der Gateway prefixt alle Upstream-Tools mit dem Namespace, sodass keine
+            Konflikte zwischen Bereichen entstehen. Pattern:
+            <code class="font-mono text-xs bg-[#005F73]/5 text-[#005F73] px-1 rounded">{`{namespace}_{tool}`}</code>.
+          </p>
+          <ul class="space-y-1 list-disc list-inside text-xs">
+            <li><code class="font-mono text-[#005F73]">itil_*</code> — ITIL Knowledge</li>
+            <li><code class="font-mono text-[#005F73]">servicenow_*</code> — ServiceNow Knowledge</li>
+            <li><code class="font-mono text-[#005F73]">ot_*</code> — OMNITRACKER</li>
+            <li><code class="font-mono text-[#005F73]">fnt_*</code> — FNT Command</li>
+            <li><code class="font-mono text-[#005F73]">searxng_*</code> — Web Search</li>
+            <li><code class="font-mono text-[#005F73]">standortiq_*</code> — StandortIQ Marktanalyse</li>
+          </ul>
+          <p>
+            Komplette Tool-Referenz auf <a href="/docs" class="text-[#005F73] hover:text-[#E96C00] font-semibold">/docs</a>.
+          </p>
+        </div>
+      </section>
+
+      <!-- Troubleshooting -->
+      <section>
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-4">Troubleshooting</h2>
+        <div class="space-y-4 text-sm">
+          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
+              Client zeigt „Tool result could not be submitted. Refresh the page"
+            </summary>
+            <p class="mt-3 text-[#6B6B8A] leading-relaxed">
+              Tritt nach Gateway-Restarts auf älteren Versionen auf. Aktueller Stand:
+              der Gateway läuft im Stateless-Modus, Sessions verschwinden nicht mehr
+              bei Restart. Sollte der Fehler trotzdem kommen — Connector im Client
+              einmal trennen und neu verbinden.
+            </p>
+          </details>
+          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
+              StandortIQ-Calls timen aus
+            </summary>
+            <p class="mt-3 text-[#6B6B8A] leading-relaxed">
+              <code class="font-mono text-xs">generate_analysis</code> braucht 30–120s
+              für Geocoding + 15 API-Fan-Outs + Word/Excel-Render. Standard-Timeout
+              im Gateway ist 300s — das sollte reichen. Wenn dein Client einen kürzeren
+              Timeout setzt, müsste der dort hochgesetzt werden.
+            </p>
+          </details>
+          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
+              „403 forbidden" bei Tool-Aufruf
+            </summary>
+            <p class="mt-3 text-[#6B6B8A] leading-relaxed">
+              Bedeutet: kein gültiges Entitlement für den Namespace. Entweder Trial
+              abgelaufen, oder das Produkt war nie aktiviert. Im Account-Dashboard
+              prüfen, ob die TenantProduct-Row für den Namespace open ist.
+            </p>
+          </details>
+          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
+              Selbst entwickelter MCP-Client
+            </summary>
+            <p class="mt-3 text-[#6B6B8A] leading-relaxed">
+              Der Gateway implementiert OAuth 2.1 mit DCR (RFC 7591) und PKCE-only.
+              Discovery via <code class="font-mono text-xs">{gatewayUrl}/.well-known/oauth-authorization-server</code>.
+              Tokens sind RFC-9068-JWTs. Nach dem Login das JWT als
+              <code class="font-mono text-xs">Authorization: Bearer …</code>
+              an <code class="font-mono text-xs">{gatewayUrl}/mcp</code> senden.
+            </p>
+          </details>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

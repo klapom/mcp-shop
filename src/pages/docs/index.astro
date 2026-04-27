@@ -1,0 +1,128 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { loadNamespaces, loadTools, totalToolCount } from '../../lib/tools';
+
+const namespaces = loadNamespaces();
+const allTools = loadTools();
+const totalTools = totalToolCount();
+---
+
+<Layout
+  title="Dokumentation"
+  description={`Tool-Referenz für alle ${totalTools} MCP-Tools — ITIL, ServiceNow, OMNITRACKER, FNT, SearXNG und StandortIQ.`}
+>
+  <Header />
+
+  <main>
+    <!-- Hero -->
+    <section class="bg-[#003845] text-white py-16 px-6">
+      <div class="max-w-4xl mx-auto">
+        <p class="text-[#E96C00] font-semibold text-sm tracking-widest uppercase mb-3">
+          Dokumentation
+        </p>
+        <h1 class="text-3xl md:text-5xl font-bold mb-4">Tool-Referenz</h1>
+        <p class="text-lg text-white/80 max-w-2xl">
+          {totalTools} Tools über {namespaces.length} Knowledge-Namespaces. Jedes Tool
+          ist über das Pommer-Gateway via MCP erreichbar — namespaced, OAuth-gesichert,
+          kompatibel mit Claude Desktop, Cowork und Copilot Studio.
+        </p>
+      </div>
+    </section>
+
+    <!-- Quickstart-Card -->
+    <section class="py-12 px-6 bg-[#F4F4F8]">
+      <div class="max-w-4xl mx-auto">
+        <a
+          href="/docs/quickstart"
+          class="block bg-white rounded-xl border border-[#E96C00]/20 shadow-sm hover:shadow-md hover:border-[#005F73]/40 transition-all p-6"
+        >
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-lg bg-[#E96C00]/10 flex items-center justify-center text-2xl flex-shrink-0">
+              🚀
+            </div>
+            <div class="flex-1">
+              <h2 class="text-xl font-bold text-[#1A1A2E] mb-1">Quickstart</h2>
+              <p class="text-sm text-[#6B6B8A]">
+                In 5 Minuten von Trial-Aktivierung zum ersten Tool-Call in
+                Claude Desktop, Claude Cowork oder Copilot Studio.
+              </p>
+            </div>
+            <span class="text-[#005F73] font-semibold text-sm self-center">→</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Namespaces grid -->
+    <section class="py-12 px-6 bg-[#F4F4F8]">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="text-2xl font-bold text-[#1A1A2E] mb-2">Namespaces</h2>
+        <p class="text-sm text-[#6B6B8A] mb-8">
+          Jeder Namespace ist ein Knowledge-Bereich mit eigenen Tools.
+          Tool-Namen werden im Gateway mit Namespace-Prefix exponiert
+          (<code class="font-mono text-xs bg-[#005F73]/10 text-[#005F73] px-1 rounded">{`{namespace}_{tool}`}</code>).
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          {namespaces.map((ns) => {
+            const toolCount = (allTools[ns.id] ?? []).length;
+            const accentClass = ns.accent === "orange"
+              ? "bg-[#E96C00]/10 text-[#E96C00]"
+              : "bg-[#005F73]/10 text-[#005F73]";
+            return (
+              <a
+                href={`/docs/${ns.id}`}
+                class="group block bg-white rounded-xl border border-[#E96C00]/10 shadow-sm hover:shadow-md hover:border-[#005F73]/30 transition-all p-6"
+              >
+                <div class="flex items-start gap-4">
+                  <div class={`w-12 h-12 rounded-lg ${accentClass} flex items-center justify-center text-2xl flex-shrink-0`}>
+                    {ns.icon}
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-lg font-bold text-[#1A1A2E] group-hover:text-[#005F73] transition-colors mb-1">
+                      {ns.display_name}
+                    </h3>
+                    <p class="text-sm text-[#6B6B8A] mb-3">{ns.short}</p>
+                    <div class="flex items-center gap-3 text-xs">
+                      <span class="font-mono text-[#005F73] bg-[#005F73]/5 px-2 py-0.5 rounded">
+                        {ns.id}/
+                      </span>
+                      <span class="text-[#6B6B8A]">{toolCount} Tools</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    <!-- How tool-naming works -->
+    <section class="py-12 px-6 bg-white">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-4">Tool-Naming-Konvention</h2>
+        <p class="text-sm text-[#6B6B8A] mb-4">
+          Der Gateway aggregiert alle Upstream-Tools und prefixt sie mit dem
+          Namespace, sodass kein Konflikt zwischen Tools mit gleichem Namen
+          aus unterschiedlichen Bereichen entsteht.
+        </p>
+        <div class="bg-[#1A1A2E] text-white rounded-lg p-4 font-mono text-sm overflow-x-auto">
+          <div class="text-[#6B6B8A] mb-1"># Im Upstream-MCP definiert:</div>
+          <div>tool name: <span class="text-[#E96C00]">ask_itil</span></div>
+          <div class="text-[#6B6B8A] mt-3 mb-1"># Über den Gateway sichtbar:</div>
+          <div>tool name: <span class="text-[#E96C00]">itil_ask_itil</span></div>
+        </div>
+        <p class="text-xs text-[#6B6B8A] mt-3">
+          Die Tool-Listings auf dieser Seite zeigen den unprefixten Namen
+          (so wie er im Upstream definiert ist). Im Client-Aufruf den
+          Namespace-Prefix mit Underscore vorstellen.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

@@ -9,6 +9,14 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    preview: {
+      // CF-Tunnel-fronted access (shop.pommerconsulting.de + ephemeral
+      // *.trycloudflare.com URLs). Vite default blocks foreign Host headers
+      // (DNS-rebind protection). For the static-shop preview that's
+      // overkill — the dist/ contains no secrets and we sit behind CF Access
+      // via the tunnel anyway.
+      allowedHosts: true,
+    },
   },
 
   image: {
