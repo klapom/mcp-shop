@@ -1,0 +1,223 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const lastUpdated = "2026-04-27";
+---
+
+<Layout
+  title="Datenschutz"
+  description="Datenschutzerklärung gemäß Art. 13 DSGVO."
+>
+  <Header />
+
+  <main>
+    <section class="bg-[#003845] text-white py-12 px-6">
+      <div class="max-w-3xl mx-auto">
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">Datenschutzerklärung</h1>
+        <p class="text-white/70 text-sm">Letzte Aktualisierung: {lastUpdated}</p>
+      </div>
+    </section>
+
+    <div class="max-w-3xl mx-auto px-6 py-12 space-y-10">
+      <!-- 1. Verantwortlicher -->
+      <section>
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-3">1. Verantwortlicher</h2>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed mb-3">
+          Verantwortlich für die Datenverarbeitung auf dieser Website ist:
+        </p>
+        <div class="text-sm text-[#6B6B8A] space-y-1">
+          <p class="text-[#1A1A2E] font-semibold">Pommer Consulting</p>
+          <p>Klaus Pommer</p>
+          <p>[CHANGE_ME — Straße + Hausnummer]</p>
+          <p>[CHANGE_ME — PLZ + Ort]</p>
+          <p>
+            E-Mail:
+            <a href="mailto:datenschutz@pommerconsulting.de" class="text-[#005F73] hover:text-[#E96C00]">
+              datenschutz@pommerconsulting.de
+            </a>
+          </p>
+        </div>
+      </section>
+
+      <!-- 2. Erhobene Daten -->
+      <section>
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-3">
+          2. Welche Daten werden verarbeitet?
+        </h2>
+
+        <h3 class="text-base font-semibold text-[#1A1A2E] mt-4 mb-2">2.1 Server-Logs</h3>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed">
+          Beim Aufruf dieser Website werden technisch notwendige Daten
+          (IP-Adresse, Zeitstempel, abgerufene Seite, User-Agent) durch unseren
+          CDN-Anbieter Cloudflare protokolliert. Die Verarbeitung erfolgt zur
+          Sicherstellung des Betriebs und zur Abwehr von Missbrauch
+          (Art. 6 Abs. 1 lit. f DSGVO). Speicherdauer: max. 30 Tage.
+        </p>
+
+        <h3 class="text-base font-semibold text-[#1A1A2E] mt-4 mb-2">2.2 Konto + MCP-Nutzung</h3>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed">
+          Bei Registrierung über unseren Identity-Provider WorkOS werden
+          E-Mail-Adresse, Name und Organisations-Zuordnung verarbeitet.
+          Bei jedem Tool-Call werden Tenant-ID, Tool-Name und Zeitstempel
+          gespeichert (kein Inhalt der Anfrage). Diese Daten dienen
+          ausschließlich der Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO),
+          Abrechnung und Missbrauchs-Erkennung.
+        </p>
+
+        <h3 class="text-base font-semibold text-[#1A1A2E] mt-4 mb-2">2.3 Zahlungsabwicklung</h3>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed">
+          Bei kostenpflichtiger Nutzung werden die für die Zahlung erforderlichen
+          Daten (Name, Rechnungsadresse, Zahlungsmittel) durch unseren
+          Zahlungsdienstleister Stripe verarbeitet. Wir erhalten lediglich eine
+          Bestätigung der erfolgreichen Zahlung sowie eine
+          Stripe-Customer-ID — keine Zahlungsmittel-Daten.
+        </p>
+
+        <h3 class="text-base font-semibold text-[#1A1A2E] mt-4 mb-2">2.4 Cookies</h3>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed">
+          Diese Website setzt keine Tracking-Cookies. Technisch notwendige
+          Cookies (Session-Verwaltung beim Login, CSRF-Schutz) werden für die
+          Dauer der Session im Browser gehalten und nach Logout entfernt.
+        </p>
+      </section>
+
+      <!-- 3. Empfänger / Auftragsverarbeiter -->
+      <section>
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-3">
+          3. Empfänger und Auftragsverarbeiter
+        </h2>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed mb-4">
+          Wir setzen folgende Auftragsverarbeiter ein. Mit allen besteht ein
+          Auftragsverarbeitungsvertrag (AVV) gemäß Art. 28 DSGVO.
+        </p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-[#6B6B8A]">
+            <thead>
+              <tr class="border-b border-[#F4F4F8] text-[#1A1A2E] text-left">
+                <th class="py-2 pr-3 font-semibold">Anbieter</th>
+                <th class="py-2 pr-3 font-semibold">Zweck</th>
+                <th class="py-2 pr-3 font-semibold">Sitz</th>
+                <th class="py-2 font-semibold">Übermittlung außerhalb EU</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-[#F4F4F8]/50">
+                <td class="py-2 pr-3 text-[#1A1A2E]">Cloudflare, Inc.</td>
+                <td class="py-2 pr-3">CDN, DDoS-Schutz, Tunnel</td>
+                <td class="py-2 pr-3">USA</td>
+                <td class="py-2">Standardvertragsklauseln (SCC)</td>
+              </tr>
+              <tr class="border-b border-[#F4F4F8]/50">
+                <td class="py-2 pr-3 text-[#1A1A2E]">WorkOS, Inc.</td>
+                <td class="py-2 pr-3">Identity-Provider (Login)</td>
+                <td class="py-2 pr-3">USA</td>
+                <td class="py-2">SCC + DPF</td>
+              </tr>
+              <tr class="border-b border-[#F4F4F8]/50">
+                <td class="py-2 pr-3 text-[#1A1A2E]">Stripe Payments Europe Ltd.</td>
+                <td class="py-2 pr-3">Zahlungsabwicklung</td>
+                <td class="py-2 pr-3">Irland</td>
+                <td class="py-2">Innerhalb EU/EWR</td>
+              </tr>
+              <tr class="border-b border-[#F4F4F8]/50">
+                <td class="py-2 pr-3 text-[#1A1A2E]">Hetzner Online GmbH</td>
+                <td class="py-2 pr-3">Hosting (Application + DB)</td>
+                <td class="py-2 pr-3">Deutschland</td>
+                <td class="py-2">Innerhalb EU/EWR</td>
+              </tr>
+              <tr>
+                <td class="py-2 pr-3 text-[#1A1A2E]">Anthropic, PBC</td>
+                <td class="py-2 pr-3">[CHANGE_ME — nur falls Anthropic-LLM-Calls direkt aus Backend gemacht werden, sonst Zeile löschen]</td>
+                <td class="py-2 pr-3">USA</td>
+                <td class="py-2">SCC</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-[#6B6B8A] mt-3 leading-relaxed">
+          Hinweis zur LLM-Nutzung: Eingaben an unsere MCP-Tools werden im LLM
+          unseres Wissens-Backends (lokal gehostet) verarbeitet — nicht von
+          Anthropic, OpenAI oder anderen externen LLM-Providern.
+        </p>
+      </section>
+
+      <!-- 4. Speicherdauer -->
+      <section>
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-3">4. Speicherdauer</h2>
+        <ul class="text-sm text-[#6B6B8A] space-y-2 list-disc list-inside leading-relaxed">
+          <li>Server-Logs: max. 30 Tage</li>
+          <li>Tool-Call-Audit-Logs: 12 Monate</li>
+          <li>Account- und Vertragsdaten: bis 6 Jahre nach Vertragsende (handels- und steuerrechtliche Aufbewahrungspflichten gemäß § 257 HGB / § 147 AO)</li>
+          <li>Marketing-Cookies / Tracking-Daten: nicht erhoben</li>
+        </ul>
+      </section>
+
+      <!-- 5. Betroffenenrechte -->
+      <section>
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-3">5. Ihre Rechte</h2>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed mb-3">
+          Nach DSGVO haben Sie folgende Rechte gegenüber uns:
+        </p>
+        <ul class="text-sm text-[#6B6B8A] space-y-1 list-disc list-inside leading-relaxed">
+          <li>Auskunft über die zu Ihrer Person gespeicherten Daten (Art. 15)</li>
+          <li>Berichtigung unrichtiger Daten (Art. 16)</li>
+          <li>Löschung Ihrer Daten („Recht auf Vergessenwerden", Art. 17)</li>
+          <li>Einschränkung der Verarbeitung (Art. 18)</li>
+          <li>Datenübertragbarkeit (Art. 20)</li>
+          <li>Widerspruch gegen die Verarbeitung (Art. 21)</li>
+          <li>Widerruf erteilter Einwilligungen (Art. 7 Abs. 3)</li>
+        </ul>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed mt-3">
+          Die Ausübung Ihrer Rechte ist formlos per E-Mail an
+          <a href="mailto:datenschutz@pommerconsulting.de" class="text-[#005F73] hover:text-[#E96C00]">
+            datenschutz@pommerconsulting.de
+          </a>
+          möglich.
+        </p>
+      </section>
+
+      <!-- 6. Beschwerderecht -->
+      <section>
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-3">6. Beschwerderecht</h2>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed">
+          Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde
+          über die Verarbeitung Ihrer personenbezogenen Daten zu beschweren
+          (Art. 77 DSGVO). Zuständig ist:
+        </p>
+        <div class="text-sm text-[#6B6B8A] space-y-1 mt-3">
+          <p class="text-[#1A1A2E]">[CHANGE_ME — zuständige Aufsichtsbehörde nach Bundesland]</p>
+          <p class="text-xs">
+            z.B. für Bayern: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA),
+            Promenade 18, 91522 Ansbach,
+            <a href="https://www.lda.bayern.de" target="_blank" rel="noopener noreferrer"
+               class="text-[#005F73] hover:text-[#E96C00]">www.lda.bayern.de</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- 7. Aktualisierungen -->
+      <section>
+        <h2 class="text-xl font-bold text-[#1A1A2E] mb-3">7. Aktualisierungen dieser Erklärung</h2>
+        <p class="text-sm text-[#6B6B8A] leading-relaxed">
+          Wir behalten uns vor, diese Datenschutzerklärung anzupassen, damit
+          sie stets den aktuellen rechtlichen Anforderungen entspricht oder um
+          Änderungen unserer Leistungen umzusetzen. Maßgeblich ist die zum
+          Zeitpunkt Ihres Besuchs aktuelle Fassung.
+        </p>
+      </section>
+
+      <!-- Disclaimer -->
+      <div class="mt-12 p-4 rounded-lg bg-[#F4F4F8] border-l-4 border-[#E96C00] text-xs text-[#6B6B8A]">
+        <strong class="text-[#1A1A2E]">Hinweis Template-Status:</strong>
+        Dieser Text ist ein Grundgerüst und sollte vor Live-Schaltung
+        anwaltlich oder durch einen Datenschutzbeauftragten geprüft werden.
+        Alle <code class="font-mono text-xs bg-white px-1 rounded">[CHANGE_ME …]</code>-Marker
+        müssen befüllt werden.
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

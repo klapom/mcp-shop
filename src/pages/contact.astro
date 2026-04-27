@@ -1,0 +1,116 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout
+  title="Kontakt"
+  description="So erreichst du Pommer Consulting — E-Mail, Anschrift, Support."
+>
+  <Header />
+
+  <main>
+    <section class="bg-[#003845] text-white py-12 px-6">
+      <div class="max-w-3xl mx-auto">
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">Kontakt</h1>
+        <p class="text-white/80">Wir antworten in der Regel innerhalb eines Werktags.</p>
+      </div>
+    </section>
+
+    <div class="max-w-3xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-6">
+      <!-- Allgemeine Anfragen -->
+      <div class="bg-white rounded-xl border border-[#F4F4F8] p-6">
+        <div class="text-2xl mb-3">📩</div>
+        <h2 class="text-lg font-bold text-[#1A1A2E] mb-2">Allgemein</h2>
+        <p class="text-sm text-[#6B6B8A] mb-4">
+          Vertrieb, Partnerschaften, Presseanfragen.
+        </p>
+        <a href="mailto:kontakt@pommerconsulting.de"
+           class="text-sm font-mono text-[#005F73] hover:text-[#E96C00] break-all">
+          kontakt@pommerconsulting.de
+        </a>
+      </div>
+
+      <!-- Support -->
+      <div class="bg-white rounded-xl border border-[#F4F4F8] p-6">
+        <div class="text-2xl mb-3">🛠️</div>
+        <h2 class="text-lg font-bold text-[#1A1A2E] mb-2">Support</h2>
+        <p class="text-sm text-[#6B6B8A] mb-4">
+          Probleme mit MCP-Anbindung, Tool-Calls oder Login.
+        </p>
+        <a href="mailto:support@pommerconsulting.de"
+           class="text-sm font-mono text-[#005F73] hover:text-[#E96C00] break-all">
+          support@pommerconsulting.de
+        </a>
+      </div>
+
+      <!-- Datenschutz -->
+      <div class="bg-white rounded-xl border border-[#F4F4F8] p-6">
+        <div class="text-2xl mb-3">🔐</div>
+        <h2 class="text-lg font-bold text-[#1A1A2E] mb-2">Datenschutz</h2>
+        <p class="text-sm text-[#6B6B8A] mb-4">
+          Auskunfts-, Berichtigungs- und Löschungsanfragen.
+        </p>
+        <a href="mailto:datenschutz@pommerconsulting.de"
+           class="text-sm font-mono text-[#005F73] hover:text-[#E96C00] break-all">
+          datenschutz@pommerconsulting.de
+        </a>
+      </div>
+
+      <!-- Anschrift -->
+      <div class="bg-white rounded-xl border border-[#F4F4F8] p-6">
+        <div class="text-2xl mb-3">📍</div>
+        <h2 class="text-lg font-bold text-[#1A1A2E] mb-2">Anschrift</h2>
+        <div class="text-sm text-[#6B6B8A] space-y-1">
+          <p class="text-[#1A1A2E] font-semibold">Pommer Consulting</p>
+          <p>Klaus Pommer</p>
+          <p>[CHANGE_ME — Straße + Hausnummer]</p>
+          <p>[CHANGE_ME — PLZ + Ort]</p>
+          <p>Deutschland</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Pointers -->
+    <div class="max-w-3xl mx-auto px-6 pb-12">
+      <div class="bg-[#F4F4F8] rounded-xl p-6">
+        <h3 class="text-sm font-bold text-[#1A1A2E] mb-3 uppercase tracking-wider">
+          Bevor du schreibst
+        </h3>
+        <ul class="text-sm text-[#6B6B8A] space-y-2">
+          <li class="flex gap-2">
+            <span class="text-[#005F73] flex-shrink-0">→</span>
+            <span>
+              Setup-Frage? Probier zuerst die
+              <a href="/docs/quickstart" class="text-[#005F73] hover:text-[#E96C00] font-semibold">
+                Quickstart-Anleitung
+              </a>.
+            </span>
+          </li>
+          <li class="flex gap-2">
+            <span class="text-[#005F73] flex-shrink-0">→</span>
+            <span>
+              Tool-Frage? Schau in die
+              <a href="/docs" class="text-[#005F73] hover:text-[#E96C00] font-semibold">
+                Tool-Referenz
+              </a>.
+            </span>
+          </li>
+          <li class="flex gap-2">
+            <span class="text-[#005F73] flex-shrink-0">→</span>
+            <span>
+              Service-Status:
+              <a href="https://mcp.pommerconsulting.de/status" target="_blank" rel="noopener noreferrer"
+                 class="text-[#005F73] hover:text-[#E96C00] font-semibold">
+                Status-Page
+              </a>.
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
