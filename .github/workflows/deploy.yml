@@ -1,14 +1,29 @@
 name: Deploy
 
+# Sprint 9.11 (2026-05-16): self-hosted runner on DGX builds + restarts the
+# static-site systemd user-service in place. Replaces the broken
+# ubuntu-latest + rsync + nginx flow that never worked (no secrets, wrong
+# target path).
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+# Cancel an in-flight deploy if a new push lands while we're building.
+concurrency:
+  group: deploy-mcp-shop
+  cancel-in-progress: false
+
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, dgx]
     environment: production
+
+    env:
+      SERVING_DIR: /home/admin/projects/mcp-shop/dist
+      XDG_RUNTIME_DIR: /run/user/1000
+      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1000/bus
 
     steps:
       - uses: actions/checkout@v4
@@ -26,26 +41,31 @@ jobs:
           SITE_URL: https://shop.pommerconsulting.de
           GATEWAY_URL: https://mcp.pommerconsulting.de
 
-      - name: Smoke test
+      - name: Smoke test — all product pages built
         run: |
           for slug in itil servicenow ot fnt searxng standortiq; do
             test -f dist/products/$slug/index.html || { echo "MISSING: $slug"; exit 1; }
           done
+          test -f dist/index.html || { echo "MISSING: index"; exit 1; }
+          echo "All pages built successfully"
 
-      - name: Deploy to Spark via rsync
-        uses: burnett01/rsync-deployments@7.0.1
-        with:
-          switches: -rlptDv --delete --exclude='.git'
-          path: dist/
-          remote_path: /var/www/mcp-shop/
-          remote_host: ${{ secrets.DEPLOY_HOST }}
-          remote_user: ${{ secrets.DEPLOY_USER }}
-          remote_key: ${{ secrets.DEPLOY_SSH_KEY }}
+      - name: Sync dist/ to serving directory
+        run: |
+          mkdir -p "$SERVING_DIR"
+          rsync -a --delete dist/ "$SERVING_DIR/"
+          echo "Synced $(find "$SERVING_DIR" -type f | wc -l) files to $SERVING_DIR"
 
-      - name: Reload nginx
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: sudo nginx -s reload
+      - name: Restart mcp-shop service
+        run: |
+          systemctl --user restart mcp-shop.service
+          systemctl --user is-active mcp-shop.service
+
+      - name: Verify public URL
+        run: |
+          # Give the python http.server ~2s to bind
+          sleep 2
+          for path in / /products/ /products/ot/; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" "https://shop.pommerconsulting.de$path")
+            echo "  $path → HTTP $code"
+            [ "$code" = "200" ] || exit 1
+          done

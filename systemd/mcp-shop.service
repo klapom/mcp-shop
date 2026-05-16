@@ -1,0 +1,18 @@
+[Unit]
+Description=mcp-shop static Astro site (dist/) on :34400 → shop.pommerconsulting.de
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/mcp-shop
+# Static Astro output — Python http.server is light, fast, no Node-runtime.
+# Bind 127.0.0.1 only; CF Tunnel handles the public side.
+ExecStart=/usr/bin/python3 -m http.server 34400 --bind 127.0.0.1 --directory %h/projects/mcp-shop/dist
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
