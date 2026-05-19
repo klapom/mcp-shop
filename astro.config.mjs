@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
 import sitemap from '@astrojs/sitemap';
+import preact from '@astrojs/preact';
 
 export default defineConfig({
   site: 'https://shop.pommerconsulting.de',
@@ -23,5 +24,5 @@ export default defineConfig({
     remotePatterns: [{ protocol: 'https' }],
   },
 
-  integrations: [sitemap()],
+  integrations: [sitemap(), preact()],
 });
