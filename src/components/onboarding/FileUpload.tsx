@@ -1,6 +1,7 @@
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useMemo } from 'preact/hooks';
 import { loadState, saveState } from '../../lib/wizard-state';
-import { uploadFile } from '../../lib/api';
+import { uploadFile, deleteUpload } from '../../lib/api';
+import { hintsForPersonas } from '../../lib/persona-hints';
 import type { UploadRecord } from '../../lib/wizard-state';
 
 const MAX_SIZE_BYTES = 15 * 1024 * 1024;
@@ -88,13 +89,33 @@ export default function FileUpload({ onNext, onBack }: Props) {
     }
   }
 
+  async function removeUploaded(record: UploadRecord) {
+    const tenantId = state.tenantId!;
+    const token = state.token!;
+    try {
+      await deleteUpload(tenantId, token, record.id);
+    } catch (e) {
+      // ignore — UI removal proceeds anyway
+      console.warn('delete failed', e);
+    }
+    setDone((prev) => {
+      const next = prev.filter((r) => r.id !== record.id);
+      saveState({ uploads: next });
+      return next;
+    });
+  }
+
+  function removeQueued(file: File) {
+    setEntries((prev) => prev.filter((e) => e.file !== file));
+  }
+
   function handleNext() {
     saveState({ uploads: done });
     onNext();
   }
 
   const hasPending = entries.some((e) => e.status === 'pending');
-  const allDone = entries.every((e) => e.status === 'done' || e.status === 'error');
+  const personaHints = useMemo(() => hintsForPersonas(state.selectedPersonas ?? []), [state.selectedPersonas]);
 
   return (
     <div>
@@ -102,6 +123,23 @@ export default function FileUpload({ onNext, onBack }: Props) {
       <p class="text-gray-400 mb-6">
         Laden Sie Ihre Unternehmens-Dokumente hoch. Erlaubt: .md .txt .pdf .docx .html .csv .yaml .json (max. 15 MB/Datei)
       </p>
+
+      {/* Persona-spezifische Hinweise */}
+      {personaHints.length > 0 && (
+        <div class="mb-6 rounded-xl bg-indigo-900/20 border border-indigo-600/40 p-4">
+          <div class="text-sm font-semibold text-indigo-200 mb-2">
+            Hilfreiche Dokumente für Ihre ausgewählten Personas
+          </div>
+          <ul class="space-y-2">
+            {personaHints.map((h) => (
+              <li key={h.key} class="text-sm text-gray-300">
+                <span class="font-medium text-indigo-300">{h.label}:</span>{' '}
+                <span class="text-gray-400">{h.documents.join(' · ')}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Drop Zone */}
       <div
@@ -140,6 +178,16 @@ export default function FileUpload({ onNext, onBack }: Props) {
                 <span class="text-gray-500 text-xs flex-shrink-0">{fmtSize(entry.file.size)}</span>
                 {entry.status === 'done' && <span class="text-green-400 text-sm flex-shrink-0">✓</span>}
                 {entry.status === 'error' && <span class="text-red-400 text-sm flex-shrink-0">✗</span>}
+                {entry.status === 'pending' && (
+                  <button
+                    type="button"
+                    onClick={() => removeQueued(entry.file)}
+                    title="Entfernen"
+                    class="text-gray-500 hover:text-red-400 text-sm flex-shrink-0"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
               {entry.status === 'uploading' && (
                 <div class="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -167,6 +215,14 @@ export default function FileUpload({ onNext, onBack }: Props) {
                 <span class="text-green-400 text-sm">✓</span>
                 <span class="text-gray-200 text-sm truncate">{r.filename}</span>
                 <span class="text-gray-500 text-xs flex-shrink-0 ml-auto">{fmtSize(r.size)}</span>
+                <button
+                  type="button"
+                  onClick={() => removeUploaded(r)}
+                  title="Datei entfernen"
+                  class="text-gray-500 hover:text-red-400 text-sm flex-shrink-0"
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>

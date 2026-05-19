@@ -81,6 +81,16 @@ export async function uploadFile(
   });
 }
 
+export async function deleteUpload(tenantId: string, token: string, uploadId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/uploads/${uploadId}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`Löschen fehlgeschlagen (${res.status})`);
+  }
+}
+
 export async function runAudit(tenantId: string, token: string): Promise<AuditReport> {
   const res = await fetch(`${API_BASE}/tenants/${tenantId}/audit`, {
     method: 'POST',
