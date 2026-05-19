@@ -130,7 +130,7 @@ test.describe('Onboarding Wizard — Happy Path', () => {
     await expect(page.getByRole('button', { name: /Auswahl bestätigen \(2\)/i })).toBeVisible();
     await page.getByRole('button', { name: /Auswahl bestätigen \(2\)/i }).click();
 
-    await expect(page.getByRole('heading', { name: 'Wissens-Dokumente hochladen' })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('heading', { name: 'Datenquellen (MCPs)' })).toBeVisible({ timeout: 5000 });
   });
 
   test('Step 2 — skip upload and advance', async ({ page }) => {
@@ -144,7 +144,7 @@ test.describe('Onboarding Wizard — Happy Path', () => {
       uploads: [],
     });
 
-    await page.goto('/onboarding?step=2');
+    await page.goto('/onboarding?step=3');
     await expect(page.getByRole('heading', { name: 'Wissens-Dokumente hochladen' })).toBeVisible({ timeout: 5000 });
 
     await page.getByRole('button', { name: /Überspringen/i }).click();
@@ -162,7 +162,7 @@ test.describe('Onboarding Wizard — Happy Path', () => {
       uploads: [],
     });
 
-    await page.goto('/onboarding?step=3');
+    await page.goto('/onboarding?step=4');
     await expect(page.getByRole('heading', { name: 'Wissens-Audit' })).toBeVisible({ timeout: 5000 });
     await expect(page.getByText(/Willkommen bei Pommer Agents/i)).toBeVisible();
 
@@ -184,7 +184,7 @@ test.describe('Onboarding Wizard — Happy Path', () => {
       audit: MOCK_AUDIT_REPORT,
     });
 
-    await page.goto('/onboarding?step=4');
+    await page.goto('/onboarding?step=5');
     await expect(page.getByRole('heading', { name: 'Audit-Report' })).toBeVisible({ timeout: 5000 });
     await expect(page.getByText('85%')).toBeVisible();
 
@@ -204,7 +204,7 @@ test.describe('Onboarding Wizard — Happy Path', () => {
       audit: MOCK_AUDIT_REPORT,
     });
 
-    await page.goto('/onboarding?step=5');
+    await page.goto('/onboarding?step=6');
     await expect(page.getByRole('heading', { name: 'Avatar-Personalisierung' })).toBeVisible({ timeout: 5000 });
     await page.getByRole('button', { name: /Persona-Defaults beibehalten/i }).click();
     await expect(page.getByRole('heading', { name: 'Zusammenfassung & Aktivierung' })).toBeVisible({ timeout: 5000 });
@@ -222,7 +222,7 @@ test.describe('Onboarding Wizard — Happy Path', () => {
       audit: MOCK_AUDIT_REPORT,
     });
 
-    await page.goto('/onboarding?step=6');
+    await page.goto('/onboarding?step=7');
     await expect(page.getByRole('heading', { name: 'Zusammenfassung & Aktivierung' })).toBeVisible({ timeout: 5000 });
 
     await expect(page.getByText('Test GmbH')).toBeVisible();

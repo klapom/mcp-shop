@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import AccountForm from './AccountForm';
 import PersonaSelect from './PersonaSelect';
+import McpRegistry from './McpRegistry';
 import FileUpload from './FileUpload';
 import HelgaChat from './HelgaChat';
 import AuditReport from './AuditReport';
@@ -12,6 +13,7 @@ import { saveState } from '../../lib/wizard-state';
 const STEPS = [
   { label: 'Account anlegen', short: 'Account' },
   { label: 'Personas wählen', short: 'Personas' },
+  { label: 'Datenquellen (MCPs)', short: 'MCPs' },
   { label: 'Dokumente', short: 'Dokumente' },
   { label: 'Wissens-Audit', short: 'Audit' },
   { label: 'Audit-Report', short: 'Report' },
@@ -50,7 +52,7 @@ export default function OnboardingWizard() {
 
   function handleAuditDone(report: AuditReportType) {
     saveState({ audit: report });
-    goTo(4);
+    goTo(5);
   }
 
   return (
@@ -118,11 +120,12 @@ export default function OnboardingWizard() {
         <main class="flex-1 p-6 md:p-10 pb-20 md:pb-10 max-w-4xl">
           {step === 0 && <AccountForm onNext={next} />}
           {step === 1 && <PersonaSelect onNext={next} onBack={back} />}
-          {step === 2 && <FileUpload onNext={next} onBack={back} />}
-          {step === 3 && <HelgaChat onNext={handleAuditDone} onBack={back} />}
-          {step === 4 && <AuditReport onNext={next} onBack={back} />}
-          {step === 5 && <AvatarPersonalize onNext={next} onBack={back} />}
-          {step === 6 && <ReviewActivate onBack={back} />}
+          {step === 2 && <McpRegistry onNext={next} onBack={back} />}
+          {step === 3 && <FileUpload onNext={next} onBack={back} />}
+          {step === 4 && <HelgaChat onNext={handleAuditDone} onBack={back} />}
+          {step === 5 && <AuditReport onNext={next} onBack={back} />}
+          {step === 6 && <AvatarPersonalize onNext={next} onBack={back} />}
+          {step === 7 && <ReviewActivate onBack={back} />}
         </main>
       </div>
     </div>

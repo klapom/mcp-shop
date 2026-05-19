@@ -130,6 +130,71 @@ export async function generateAvatar(
   return res.json() as Promise<AvatarResponse>;
 }
 
+// --- MCP-Registry (P26a) -------------------------------------------------
+
+export interface McpServer {
+  id: string;
+  name: string;
+  url: string;
+  persona_keys: string[] | null;
+  created_at: string;
+  has_auth: boolean;
+}
+
+export interface McpProbeResult {
+  ok: boolean;
+  tools?: Array<{ name: string; description?: string }>;
+  error?: string;
+  elapsed_ms?: number;
+}
+
+export async function listMcps(tenantId: string, token: string): Promise<McpServer[]> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/mcps`, { headers: authHeaders(token) });
+  if (!res.ok) throw new Error(`MCP-Liste fehlgeschlagen (${res.status})`);
+  return res.json() as Promise<McpServer[]>;
+}
+
+export async function registerMcp(
+  tenantId: string,
+  token: string,
+  body: { name: string; url: string; auth_token?: string; persona_keys?: string[] | null },
+): Promise<McpServer> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/mcps`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`MCP-Anlage fehlgeschlagen (${res.status}): ${detail}`);
+  }
+  return res.json() as Promise<McpServer>;
+}
+
+export async function deleteMcp(tenantId: string, token: string, mcpId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/mcps/${mcpId}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  });
+  if (!res.ok && res.status !== 404) throw new Error(`MCP-Löschen fehlgeschlagen (${res.status})`);
+}
+
+export async function probeMcp(
+  tenantId: string,
+  token: string,
+  mcpId: string,
+): Promise<McpProbeResult> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/mcps/${mcpId}/probe`, {
+    method: 'POST',
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`MCP-Probe fehlgeschlagen (${res.status}): ${detail}`);
+  }
+  return res.json() as Promise<McpProbeResult>;
+}
+
 export function avatarUrl(tenantId: string, personaKey: string, bust?: number): string {
   const ts = bust ?? Date.now();
   return `${API_BASE}/tenants/${tenantId}/personas/${personaKey}/avatar.webp?t=${ts}`;
