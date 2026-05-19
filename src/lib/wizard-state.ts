@@ -25,12 +25,13 @@ export interface AuditGap {
 }
 
 export interface AuditReport {
-  source_coverage_score: number;
-  gap_count: number;
-  recommendation_count: number;
-  gaps: AuditGap[];
-  recommendations: string[];
+  source_coverage_score?: number;
+  gap_count?: number;
+  recommendation_count?: number;
+  gaps?: AuditGap[];
+  recommendations?: string[];
   _stub?: boolean;
+  _reason?: string;
 }
 
 export interface WizardState {
