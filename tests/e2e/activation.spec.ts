@@ -67,11 +67,12 @@ test('Activation — notification_status queued shows ✓ icon and queued-mail c
   await expect(page.getByText('Anfrage eingegangen')).toBeVisible({ timeout: 5000 });
 
   // queued branch: ✓ icon (not ✉️), queued-specific body copy
-  await expect(page.getByText('✓')).toBeVisible();
+  // Match the modal's text-5xl icon div specifically to avoid the wizard step badges
+  await expect(page.locator('div.text-5xl').filter({ hasText: '✓' })).toBeVisible();
   await expect(page.getByText(/Mail-Versand wird im Hintergrund nachgezogen/i)).toBeVisible();
 
   // ✉️ icon must NOT appear for the queued branch
-  await expect(page.getByText('✉️')).not.toBeVisible();
+  await expect(page.locator('div.text-5xl').filter({ hasText: '✉️' })).not.toBeVisible();
 });
 
 test('Activation — API 500 → inline error banner, no modal, button re-enabled', async ({ page }) => {
@@ -155,8 +156,8 @@ test('McpRegistry step — shows heading and BYO-form with empty MCP list', asyn
   await page.goto('/onboarding?step=2');
   await expect(page.getByRole('heading', { name: 'Datenquellen (MCPs)' })).toBeVisible({ timeout: 5000 });
 
-  // BYO-form "MCP hinzufügen" section must be visible
-  await expect(page.getByText('MCP hinzufügen')).toBeVisible();
+  // BYO-form "MCP hinzufügen" section label must be visible (the indigo-200 div, not the submit button)
+  await expect(page.locator('div.text-indigo-200').filter({ hasText: 'MCP hinzufügen' })).toBeVisible();
 
   // Empty-state message while list is empty
   await expect(page.getByText(/Noch keine MCPs registriert/i)).toBeVisible({ timeout: 5000 });
