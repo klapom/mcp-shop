@@ -222,6 +222,20 @@ test.describe('Onboarding Wizard — Happy Path', () => {
       audit: MOCK_AUDIT_REPORT,
     });
 
+    // Mock activation endpoint
+    await page.route(`**/tenants/${MOCK_TENANT.id}/activate`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          activation_id: 'a_test',
+          tenant_id: MOCK_TENANT.id,
+          requested_at: new Date().toISOString(),
+          notification_status: 'sent',
+        }),
+      }),
+    );
+
     await page.goto('/onboarding?step=7');
     await expect(page.getByRole('heading', { name: 'Zusammenfassung & Aktivierung' })).toBeVisible({ timeout: 5000 });
 
@@ -230,6 +244,6 @@ test.describe('Onboarding Wizard — Happy Path', () => {
 
     await expect(page.getByRole('button', { name: /Pommer Consulting kontaktiert/i })).toBeVisible();
     await page.getByRole('button', { name: /Pommer Consulting kontaktiert/i }).click();
-    await expect(page.getByText('Anfrage eingegangen')).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText('Anfrage eingegangen')).toBeVisible({ timeout: 5000 });
   });
 });

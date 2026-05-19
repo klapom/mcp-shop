@@ -130,6 +130,41 @@ export async function generateAvatar(
   return res.json() as Promise<AvatarResponse>;
 }
 
+// --- Activation (P27, Klaus 2026-05-19) ---------------------------------
+
+export interface ActivationRequest {
+  persona_keys: string[];
+  persona_voice_map?: Record<string, string>;
+  upload_count: number;
+  mcp_count: number;
+  audit_score?: number | null;
+}
+
+export interface ActivationResponse {
+  activation_id: string;
+  tenant_id: string;
+  requested_at: string;
+  notification_status: 'sent' | 'queued' | 'failed';
+  notification_detail?: string | null;
+}
+
+export async function requestActivation(
+  tenantId: string,
+  token: string,
+  body: ActivationRequest,
+): Promise<ActivationResponse> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/activate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Aktivierung fehlgeschlagen (${res.status}): ${detail}`);
+  }
+  return res.json() as Promise<ActivationResponse>;
+}
+
 // --- MCP-Registry (P26a) -------------------------------------------------
 
 export interface McpServer {
