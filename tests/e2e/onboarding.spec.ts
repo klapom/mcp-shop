@@ -148,7 +148,7 @@ test.describe('Onboarding Wizard — Happy Path', () => {
     await expect(page.getByRole('heading', { name: 'Wissens-Dokumente hochladen' })).toBeVisible({ timeout: 5000 });
 
     await page.getByRole('button', { name: /Überspringen/i }).click();
-    await expect(page.getByRole('heading', { name: 'Wissens-Audit mit Helga' })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('heading', { name: 'Wissens-Audit' })).toBeVisible({ timeout: 5000 });
   });
 
   test('Step 3 — start audit (mocked) and advance to report', async ({ page }) => {
@@ -163,10 +163,10 @@ test.describe('Onboarding Wizard — Happy Path', () => {
     });
 
     await page.goto('/onboarding?step=3');
-    await expect(page.getByRole('heading', { name: 'Wissens-Audit mit Helga' })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('heading', { name: 'Wissens-Audit' })).toBeVisible({ timeout: 5000 });
     await expect(page.getByText(/Willkommen bei Pommer Agents/i)).toBeVisible();
 
-    await page.getByRole('button', { name: /Ja, starte Audit/i }).click();
+    await page.getByRole('button', { name: /Ja, Mira soll starten/i }).click();
 
     // Auto-advances to step 4 after audit completes
     await expect(page.getByRole('heading', { name: 'Audit-Report' })).toBeVisible({ timeout: 8000 });

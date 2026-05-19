@@ -10,9 +10,19 @@ import type { AuditReport } from '../../lib/wizard-state';
 // Use EventSource API in the browser.
 
 interface ChatMessage {
-  role: 'helga' | 'user';
+  role: 'helga' | 'mira' | 'user';
   text: string;
 }
+
+const AVATAR_URL: Record<'helga' | 'mira', string> = {
+  helga: '/personas/helga-default.webp',
+  mira: '/personas/mira-default.webp',
+};
+
+const ROLE_LABEL: Record<'helga' | 'mira', string> = {
+  helga: 'Helga',
+  mira: 'Mira',
+};
 
 interface Props {
   onNext: (report: AuditReport) => void;
@@ -45,7 +55,11 @@ export default function HelgaChat({ onNext, onBack }: Props) {
   const initMessages: ChatMessage[] = [
     {
       role: 'helga',
-      text: `Willkommen bei Pommer Agents! Ich bin Helga, eure HR-Agentin. Ich habe ${uploadCount} Dokument${uploadCount !== 1 ? 'e' : ''} gesehen und ${selectedCount} Persona${selectedCount !== 1 ? 's' : ''} ausgewählt. Soll ich einen Wissens-Audit starten?`,
+      text: `Willkommen bei Pommer Agents! Ich bin Helga und führe euch durchs Onboarding. Ihr habt ${uploadCount} Dokument${uploadCount !== 1 ? 'e' : ''} hochgeladen und ${selectedCount} Persona${selectedCount !== 1 ? 's' : ''} ausgewählt.`,
+    },
+    {
+      role: 'helga',
+      text: 'Für die Bewertung eurer Wissensbasis übergebe ich an Mira — unsere Customer-Knowledge-Auditorin. Soll ich Mira den Audit starten lassen?',
     },
   ];
 
@@ -57,8 +71,9 @@ export default function HelgaChat({ onNext, onBack }: Props) {
   async function startAudit() {
     setMessages((prev) => [
       ...prev,
-      { role: 'user', text: 'Ja, starte den Audit.' },
-      { role: 'helga', text: 'Perfekt! Ich analysiere jetzt eure Dokumente …' },
+      { role: 'user', text: 'Ja, bitte starten.' },
+      { role: 'helga', text: 'Gerne — ich übergebe an Mira.' },
+      { role: 'mira', text: 'Hallo, ich bin Mira. Ich analysiere jetzt eure Dokumente und prüfe Wissensabdeckung, Lücken und Empfehlungen …' },
     ]);
     setAuditRunning(true);
     setError(null);
@@ -80,11 +95,22 @@ export default function HelgaChat({ onNext, onBack }: Props) {
 
     saveState({ audit: report });
 
+    const score = report.source_coverage_score;
+    const scoreStr =
+      typeof score === 'number' && Number.isFinite(score)
+        ? `Coverage-Score ${Math.round(score * 100)}%`
+        : 'Coverage-Score noch nicht ermittelbar';
+    const gapCount = report.gap_count ?? report.gaps?.length ?? 0;
+    const recCount = report.recommendation_count ?? report.recommendations?.length ?? 0;
     setMessages((prev) => [
       ...prev,
       {
+        role: 'mira',
+        text: `Audit abgeschlossen. ${scoreStr}, ${gapCount} Wissenslücke${gapCount !== 1 ? 'n' : ''}, ${recCount} Empfehlung${recCount !== 1 ? 'en' : ''}.${report._stub ? ' (Demo-Modus — Live-Audit folgt mit hermes-rest-Integration.)' : ''}`,
+      },
+      {
         role: 'helga',
-        text: `Audit abgeschlossen! Coverage-Score: ${Math.round(report.source_coverage_score * 100)}%. Ich habe ${report.gap_count} Gap${report.gap_count !== 1 ? 's' : ''} und ${report.recommendation_count} Empfehlung${report.recommendation_count !== 1 ? 'en' : ''} gefunden.${report._stub ? ' (Demo-Ergebnis — Live-Audit folgt mit hermes-rest-Integration)' : ''}`,
+        text: 'Danke Mira! Die Details siehst du gleich im Bericht.',
       },
     ]);
     setAuditRunning(false);
@@ -96,39 +122,53 @@ export default function HelgaChat({ onNext, onBack }: Props) {
 
   return (
     <div>
-      <h2 class="text-2xl font-bold text-white mb-2">Wissens-Audit mit Helga</h2>
-      <p class="text-gray-400 mb-6">Helga analysiert eure Dokumente und gibt euch Feedback.</p>
+      <h2 class="text-2xl font-bold text-white mb-2">Wissens-Audit</h2>
+      <p class="text-gray-400 mb-6">
+        Helga (Onboarding) übergibt für die Wissens-Bewertung an Mira (Knowledge-Auditorin).
+      </p>
 
       {/* Chat window */}
       <div class="rounded-xl border border-white/10 bg-white/3 p-4 space-y-4 mb-6 min-h-[220px]">
-        {messages.map((msg, i) => (
-          <div key={i} class={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-            {msg.role === 'helga' && (
-              <img
-                src="/personas/helga-default.webp"
-                alt="Helga"
-                class="w-9 h-9 rounded-full object-cover flex-shrink-0 mt-0.5"
-              />
-            )}
-            <div
-              class={`rounded-xl px-4 py-2.5 max-w-sm text-sm ${
-                msg.role === 'helga'
-                  ? 'bg-indigo-900/50 text-gray-200'
-                  : 'bg-white/10 text-gray-200'
-              }`}
-            >
-              {msg.text}
+        {messages.map((msg, i) => {
+          const isUser = msg.role === 'user';
+          const persona = isUser ? null : (msg.role as 'helga' | 'mira');
+          return (
+            <div key={i} class={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+              {persona && (
+                <img
+                  src={AVATAR_URL[persona]}
+                  alt={ROLE_LABEL[persona]}
+                  title={ROLE_LABEL[persona]}
+                  class="w-9 h-9 rounded-full object-cover flex-shrink-0 mt-0.5"
+                />
+              )}
+              <div
+                class={`rounded-xl px-4 py-2.5 max-w-sm text-sm ${
+                  msg.role === 'mira'
+                    ? 'bg-teal-900/40 text-gray-100 border border-teal-700/40'
+                    : msg.role === 'helga'
+                      ? 'bg-indigo-900/50 text-gray-200'
+                      : 'bg-white/10 text-gray-200'
+                }`}
+              >
+                {!isUser && (
+                  <div class="text-[10px] uppercase tracking-wide opacity-60 mb-0.5">
+                    {ROLE_LABEL[persona!]}
+                  </div>
+                )}
+                {msg.text}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {auditRunning && (
           <div class="flex gap-3">
             <img
-              src="/personas/helga-default.webp"
-              alt="Helga"
+              src={AVATAR_URL.mira}
+              alt="Mira"
               class="w-9 h-9 rounded-full object-cover flex-shrink-0"
             />
-            <div class="rounded-xl bg-indigo-900/50 px-4 py-2.5 text-gray-300 text-sm flex items-center gap-2">
+            <div class="rounded-xl bg-teal-900/40 border border-teal-700/40 px-4 py-2.5 text-gray-300 text-sm flex items-center gap-2">
               <span class="animate-pulse">●</span>
               <span class="animate-pulse" style="animation-delay: 0.2s">●</span>
               <span class="animate-pulse" style="animation-delay: 0.4s">●</span>
@@ -160,7 +200,7 @@ export default function HelgaChat({ onNext, onBack }: Props) {
             disabled={auditRunning}
             class="rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2.5 font-semibold text-white transition-colors"
           >
-            {auditRunning ? 'Audit läuft …' : 'Ja, starte Audit'}
+            {auditRunning ? 'Mira analysiert …' : 'Ja, Mira soll starten'}
           </button>
         )}
         {auditDone && (
