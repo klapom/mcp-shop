@@ -7,6 +7,7 @@ export interface Persona {
   descShort: string;
   wertstrom: string;
   customerFacing: boolean;
+  tags: string[];
   avatarUrl: string;
 }
 
@@ -17,14 +18,26 @@ export const PERSONAS: Persona[] = [
     "descShort": "Brand-Architekt der Pommer Consulting",
     "wertstrom": "30-brand-zu-markt",
     "customerFacing": false,
+    "tags": [
+      "branding",
+      "corporate-identity",
+      "internal"
+    ],
     "avatarUrl": "/personas/bjoern-default.webp"
   },
   {
     "key": "brand-guard",
     "displayName": "Brand-Guard",
-    "descShort": "Cross-cutting Quality-Gate fuer Brand-Konsistenz der Pommer Agent",
+    "descShort": "Cross-cutting Quality-Gate fuer Brand-Konsistenz der Pommer Agent Firm",
     "wertstrom": "30-brand-zu-markt",
     "customerFacing": false,
+    "tags": [
+      "quality-gate",
+      "reviewer",
+      "brand",
+      "cross-cutting",
+      "internal"
+    ],
     "avatarUrl": "/personas/brand-guard-default.webp"
   },
   {
@@ -33,6 +46,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "Content-Writer und Case-Study-Autorin der Pommer Consulting",
     "wertstrom": "30-brand-zu-markt",
     "customerFacing": false,
+    "tags": [
+      "marketing",
+      "linkedin",
+      "content",
+      "case-study",
+      "internal"
+    ],
     "avatarUrl": "/personas/conny-default.webp"
   },
   {
@@ -41,6 +61,14 @@ export const PERSONAS: Persona[] = [
     "descShort": "CEO Pommer Consulting / Pommer Agent Firm — Chief-of-Staff, Wertstrom-Orchestrator",
     "wertstrom": "90-steuerung",
     "customerFacing": false,
+    "tags": [
+      "leadership",
+      "ceo",
+      "strategy",
+      "synthesis",
+      "orchestrator",
+      "internal"
+    ],
     "avatarUrl": "/personas/cora-default.webp"
   },
   {
@@ -49,6 +77,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "Dokumentations-Spezialist der Pommer Consulting",
     "wertstrom": "20-service-to-cash",
     "customerFacing": false,
+    "tags": [
+      "documentation",
+      "delivery",
+      "customer-handbook",
+      "quality-gate",
+      "internal"
+    ],
     "avatarUrl": "/personas/doku-generator-default.webp"
   },
   {
@@ -57,6 +92,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "Quality-Gate-Reviewer der Pommer Agent Firm",
     "wertstrom": "99-querschnitt",
     "customerFacing": false,
+    "tags": [
+      "quality-gate",
+      "reviewer",
+      "it-leiter",
+      "business-summary",
+      "internal"
+    ],
     "avatarUrl": "/personas/eike-default.webp"
   },
   {
@@ -65,6 +107,14 @@ export const PERSONAS: Persona[] = [
     "descShort": "Finance-DE-Agent der Pommer Agent Firm",
     "wertstrom": "99-querschnitt",
     "customerFacing": false,
+    "tags": [
+      "finance-de",
+      "compliance",
+      "buchhaltung",
+      "steuer",
+      "querschnitt",
+      "internal"
+    ],
     "avatarUrl": "/personas/ferdinand-default.webp"
   },
   {
@@ -73,6 +123,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "HR und Agent-Architektin der Pommer Agent Firm",
     "wertstrom": "40-idee-zu-skill",
     "customerFacing": false,
+    "tags": [
+      "hr",
+      "agent-architecture",
+      "onboarding",
+      "enabling",
+      "internal"
+    ],
     "avatarUrl": "/personas/helga-default.webp"
   },
   {
@@ -81,6 +138,14 @@ export const PERSONAS: Persona[] = [
     "descShort": "Legal-DE-Agentin der Pommer Agent Firm",
     "wertstrom": "99-querschnitt",
     "customerFacing": false,
+    "tags": [
+      "legal-de",
+      "compliance",
+      "dsgvo",
+      "vertrag",
+      "querschnitt",
+      "internal"
+    ],
     "avatarUrl": "/personas/larissa-default.webp"
   },
   {
@@ -89,6 +154,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "Lead-Scout und Sales-Researcher fuer DACH-OT/SN/FNT-Umfeld",
     "wertstrom": "10-lead-to-cash",
     "customerFacing": false,
+    "tags": [
+      "sales",
+      "lead-generation",
+      "dach",
+      "business-development",
+      "internal"
+    ],
     "avatarUrl": "/personas/lead-hunter-default.webp"
   },
   {
@@ -97,6 +169,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "Protokollant und Operations-Assistent der Pommer Agent Firm",
     "wertstrom": "50-wissen-zu-antwort",
     "customerFacing": false,
+    "tags": [
+      "operations",
+      "meeting",
+      "protocol",
+      "action-items",
+      "internal"
+    ],
     "avatarUrl": "/personas/meeting-summarizer-default.webp"
   },
   {
@@ -105,6 +184,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "Customer-Knowledge-Auditorin der Pommer Consulting",
     "wertstrom": "40-idee-zu-skill",
     "customerFacing": false,
+    "tags": [
+      "knowledge-audit",
+      "customer-onboarding",
+      "rag-quality",
+      "gap-analysis",
+      "internal"
+    ],
     "avatarUrl": "/personas/mira-default.webp"
   },
   {
@@ -113,6 +199,12 @@ export const PERSONAS: Persona[] = [
     "descShort": "OMNITRACKER-Fachexperte der Pommer Consulting",
     "wertstrom": "20-service-to-cash",
     "customerFacing": false,
+    "tags": [
+      "omnitracker",
+      "bpmn",
+      "com-automation",
+      "internal"
+    ],
     "avatarUrl": "/personas/ot-expert-default.webp"
   },
   {
@@ -121,6 +213,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "Quality-Gate-Reviewerin der Pommer Agent Firm",
     "wertstrom": "99-querschnitt",
     "customerFacing": false,
+    "tags": [
+      "quality-gate",
+      "reviewer",
+      "itil",
+      "compliance",
+      "internal"
+    ],
     "avatarUrl": "/personas/prisca-default.webp"
   },
   {
@@ -129,6 +228,13 @@ export const PERSONAS: Persona[] = [
     "descShort": "Quality-Gate-Reviewerin der Pommer Agent Firm",
     "wertstrom": "99-querschnitt",
     "customerFacing": false,
+    "tags": [
+      "quality-gate",
+      "reviewer",
+      "end-user",
+      "readability",
+      "internal"
+    ],
     "avatarUrl": "/personas/ulli-default.webp"
   },
   {
@@ -137,6 +243,12 @@ export const PERSONAS: Persona[] = [
     "descShort": "Quality-Gate-Reviewerin der Pommer Agent Firm",
     "wertstrom": "99-querschnitt",
     "customerFacing": false,
+    "tags": [
+      "quality-gate",
+      "reviewer",
+      "ot-admin",
+      "internal"
+    ],
     "avatarUrl": "/personas/valerie-default.webp"
   }
 ];

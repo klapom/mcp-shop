@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { readdirSync } from 'fs';
+import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
@@ -98,12 +99,13 @@ for (const key of personaDirs) {
   }
 
   const raw = readFileSync(metaPath, 'utf-8');
-  const meta = parseSimpleYaml(raw);
+  const meta = yaml.load(raw) ?? {};
 
   const displayName = meta.display_name || key;
   const descShort = meta.description_short || '';
   const wertstrom = meta.wertstrom || '';
-  const customerFacing = meta.customer_facing === 'true';
+  const customerFacing = meta.customer_facing === true;
+  const tags = Array.isArray(meta.tags) ? meta.tags : [];
   const imageDefault = meta.image?.default || `assets/${key}-default.webp`;
 
   // Copy webp asset
@@ -122,6 +124,7 @@ for (const key of personaDirs) {
     descShort,
     wertstrom,
     customerFacing,
+    tags,
   });
 }
 
@@ -136,6 +139,7 @@ export interface Persona {
   descShort: string;
   wertstrom: string;
   customerFacing: boolean;
+  tags: string[];
   avatarUrl: string;
 }
 
