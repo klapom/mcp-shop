@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'preact/hooks';
-import { loadState } from '../../lib/wizard-state';
+import { loadState, saveState } from '../../lib/wizard-state';
 import { deleteMcp, listMcps, probeMcp, registerMcp } from '../../lib/api';
 import type { McpProbeResult, McpServer } from '../../lib/api';
 import { PERSONAS } from '../../lib/personas.generated';
+import { POMMER_MCPS, defaultMcpsFor, personasUsingMcp } from '../../lib/persona-mcp-defaults';
 
 interface Props {
   onNext: () => void;
@@ -27,6 +28,32 @@ export default function McpRegistry({ onNext, onBack }: Props) {
 
   // Per-MCP probe results
   const [probeResults, setProbeResults] = useState<Record<string, McpProbeResult | 'loading'>>({});
+
+  // Pommer-MCP-Auswahl: beim ersten Betreten mit den Per-Persona-Defaults
+  // vorbelegen, danach die gespeicherte Customer-Auswahl respektieren.
+  const [pommerMcps, setPommerMcps] = useState<Set<string>>(() => {
+    const saved = state.pommerMcps;
+    if (saved !== undefined) return new Set(saved);
+    return new Set(defaultMcpsFor(selectedPersonas));
+  });
+
+  function togglePommerMcp(id: string) {
+    setPommerMcps((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      saveState({ pommerMcps: [...next] });
+      return next;
+    });
+  }
+
+  // Erstauswahl auch ohne Toggle persistieren, damit der Activation-Snapshot
+  // die Defaults sieht, falls der Customer den Step nur durchklickt.
+  useEffect(() => {
+    if (state.pommerMcps === undefined) {
+      saveState({ pommerMcps: [...pommerMcps] });
+    }
+  }, []);
 
   async function refresh() {
     if (!state.tenantId || !state.token) return;
@@ -111,9 +138,9 @@ export default function McpRegistry({ onNext, onBack }: Props) {
     <div>
       <h2 class="text-2xl font-bold text-white mb-2">Datenquellen (MCPs)</h2>
       <p class="text-gray-400 mb-6">
-        Verbinde externe Datenquellen über das Model-Context-Protocol. Pommer-eigene und
-        Customer-eigene MCPs laufen technisch identisch — gib einfach URL + optional Auth-Token
-        ein. Optional kannst Du einschränken, welche Persona den MCP nutzen darf (leer = alle).
+        Datenquellen werden über das Model-Context-Protocol angebunden. Die Pommer-eigenen
+        Quellen unten sind passend zu Deiner Persona-Auswahl vorausgewählt — Du kannst sie
+        abwählen. Darunter kannst Du eigene MCPs ergänzen.
       </p>
 
       {error && (
@@ -121,6 +148,48 @@ export default function McpRegistry({ onNext, onBack }: Props) {
           {error}
         </div>
       )}
+
+      {/* Pommer-Datenquellen — per-Persona vorausgewählt, abwählbar */}
+      <div class="mb-6">
+        <div class="text-sm font-semibold text-indigo-200 mb-1">Pommer-Datenquellen</div>
+        <p class="text-xs text-gray-500 mb-3">
+          Von Pommer betrieben und gepflegt. Vorausgewählt anhand Deiner Personas.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {POMMER_MCPS.map((m) => {
+            const checked = pommerMcps.has(m.id);
+            const users = personasUsingMcp(m.id, selectedPersonas)
+              .map((k) => PERSONAS.find((p) => p.key === k)?.displayName ?? k);
+            return (
+              <label
+                key={m.id}
+                data-pommer-mcp={m.id}
+                class={`flex items-start gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors ${
+                  checked
+                    ? 'bg-indigo-600/15 border-indigo-500/50'
+                    : 'bg-white/5 border-white/10 hover:border-white/25'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => togglePommerMcp(m.id)}
+                  class="mt-0.5 accent-indigo-500"
+                />
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-white">{m.label}</div>
+                  <div class="text-xs text-gray-400">{m.description}</div>
+                  {users.length > 0 && (
+                    <div class="mt-1 text-[10px] text-indigo-300">
+                      für {users.join(', ')}
+                    </div>
+                  )}
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      </div>
 
       {/* BYO-Form */}
       <form onSubmit={handleAdd} class="rounded-xl bg-white/5 border border-white/10 p-5 mb-6 space-y-4">
@@ -293,7 +362,10 @@ export default function McpRegistry({ onNext, onBack }: Props) {
           onClick={onNext}
           class="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-6 py-2.5 font-semibold text-white transition-colors"
         >
-          Weiter {servers.length > 0 ? `(${servers.length} MCP${servers.length !== 1 ? 's' : ''})` : '(überspringen)'}
+          {(() => {
+            const total = pommerMcps.size + servers.length;
+            return `Weiter ${total > 0 ? `(${total} MCP${total !== 1 ? 's' : ''})` : '(überspringen)'}`;
+          })()}
         </button>
       </div>
     </div>

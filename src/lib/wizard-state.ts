@@ -43,6 +43,8 @@ export interface WizardState {
   uploads?: UploadRecord[];
   audit?: AuditReport;
   avatars?: Record<string, AvatarParams>;
+  /** Vom Customer bestätigte Pommer-MCP-Auswahl (P28a — IDs aus POMMER_MCPS). */
+  pommerMcps?: string[];
 }
 
 const KEY = 'pommer_wizard_state';
