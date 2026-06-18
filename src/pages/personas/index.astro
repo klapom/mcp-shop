@@ -1,0 +1,85 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { PERSONAS } from '../../lib/personas.generated';
+
+/**
+ * Persona overview — a directory of every persona in the registry, linking to
+ * each detail page (/personas/<key>) where the Daily-Doing card and the
+ * Freigaben/Verlauf approval surface live.
+ *
+ * Customer-facing personas are listed first; internal ones follow with an
+ * "Intern" badge (mirrors the note on the detail page). The shop sits behind
+ * CF Access, so showing the full roster is fine.
+ */
+const sorted = [...PERSONAS].sort((a, b) => {
+  if (a.customerFacing !== b.customerFacing) return a.customerFacing ? -1 : 1;
+  return a.displayName.localeCompare(b.displayName);
+});
+const customerCount = sorted.filter((p) => p.customerFacing).length;
+---
+
+<Layout
+  title="Personas — Pommer Agents"
+  description="Alle Pommer-Agent-Personas im Überblick — mit Daily Doing und Freigaben-Verwaltung pro Persona."
+>
+  <Header />
+
+  <main class="bg-[#0d0d1a] text-white min-h-screen">
+    <section class="max-w-5xl mx-auto py-12 px-6">
+      <nav class="text-sm text-white/50 mb-6">
+        <a href="/" class="hover:text-white transition-colors">Start</a>
+        <span class="mx-2">/</span>
+        <span class="text-white/80">Personas</span>
+      </nav>
+
+      <header class="mb-10">
+        <h1 class="text-3xl font-bold">Personas</h1>
+        <p class="text-white/70 mt-2 max-w-2xl">
+          {PERSONAS.length} Personas im Registry ({customerCount} customer-facing).
+          Jede Persona hat eine Detailseite mit „Daily Doing" und der Freigaben-
+          &amp; Verlauf-Verwaltung.
+        </p>
+      </header>
+
+      <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {sorted.map((p) => (
+          <li>
+            <a
+              href={`/personas/${p.key}`}
+              class="group flex h-full gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 transition-colors hover:border-white/25 hover:bg-white/10"
+            >
+              <img
+                src={p.avatarUrl}
+                alt={p.displayName}
+                width={56}
+                height={56}
+                loading="lazy"
+                class="h-14 w-14 shrink-0 rounded-xl object-cover"
+              />
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-white group-hover:text-white">
+                    {p.displayName}
+                  </span>
+                  {!p.customerFacing && (
+                    <span class="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-white/50">
+                      Intern
+                    </span>
+                  )}
+                </div>
+                <p class="mt-0.5 line-clamp-2 text-sm text-white/60">{p.descShort}</p>
+                <span class="mt-2 inline-block rounded bg-white/5 px-2 py-0.5 text-[11px] text-white/50">
+                  {p.wertstrom}
+                </span>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
