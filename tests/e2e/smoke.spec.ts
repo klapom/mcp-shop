@@ -25,6 +25,17 @@ test.describe('Smoke — all pages load', () => {
     });
   }
 
+  test('personas overview lists personas and links to detail', async ({ page }) => {
+    await page.goto('/personas');
+    await expect(page).toHaveTitle(/Personas.*Pommer Agents/);
+    await expect(page.locator('h1')).toContainText('Personas');
+    // At least one persona card links to its detail page.
+    await expect(page.getByRole('link', { name: /Helga/i }).first()).toHaveAttribute(
+      'href',
+      '/personas/helga',
+    );
+  });
+
   test('checkout success page loads', async ({ page }) => {
     await page.goto('/checkout/success');
     await expect(page).toHaveTitle(/Erfolgreich.*Pommer Agents/);
