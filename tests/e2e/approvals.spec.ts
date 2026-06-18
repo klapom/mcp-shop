@@ -1,26 +1,15 @@
 import { test, expect, type Page } from '@playwright/test';
 
 /**
- * P86.5 — Persona-Approval-Management UI on the persona detail page.
+ * P86 — Persona-Approval-Management UI on the persona detail page.
  *
- * The "Freigaben" + "Verlauf" surface reads the per-tenant bearer from the
- * onboarding wizard state (localStorage) and talks to the personas-api proxy
- * (mocked here). DailyDoing's public hermes call is stubbed so the page is
- * network-isolated.
+ * Auth is the gateway JWT from the in-browser OAuth-PKCE login, kept in
+ * localStorage ('pommer_gw_token'). The approvals calls hit the gateway BFF
+ * (GATEWAY_BASE/approvals/...), mocked here. DailyDoing's public hermes call is
+ * stubbed so the page is network-isolated.
  */
 
-const MOCK = {
-  tenantId: 't_testid12345',
-  token: 'pommer_testtoken',
-};
-
-const WIZARD_STATE = {
-  tenantId: MOCK.tenantId,
-  token: MOCK.token,
-  company: 'Test GmbH',
-  branche: 'J',
-  selectedPersonas: ['helga'],
-};
+const FAKE_JWT = 'header.payload.sig'; // shape doesn't matter — gateway is mocked
 
 const MATRIX = {
   persona: 'helga',
@@ -70,27 +59,24 @@ const HISTORY = {
   ],
 };
 
-/** Stub the public DailyDoing endpoint + inject wizard state before first load. */
-async function setup(page: Page, opts: { withSession?: boolean } = {}) {
+/** Stub DailyDoing's public endpoint + inject a gateway token before first load. */
+async function setup(page: Page, opts: { withToken?: boolean } = {}) {
   await page.route('**/public/personas/**/activity', (r) =>
     r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ persona: 'helga', self_improvement: null, self_scheduled_tasks: { count: 0, cap: 5, tasks: [] } }) }),
   );
-  if (opts.withSession !== false) {
-    await page.addInitScript((s) => {
-      localStorage.setItem('pommer_wizard_state', JSON.stringify(s));
-    }, WIZARD_STATE);
+  if (opts.withToken !== false) {
+    await page.addInitScript((t) => {
+      localStorage.setItem('pommer_gw_token', t);
+    }, FAKE_JWT);
   }
 }
 
-/** Register approval-API routes. PUT bodies are captured into `puts`. */
+/** Register gateway approvals-BFF routes. PUT bodies are captured into `puts`. */
 async function mockApprovals(page: Page, puts: Array<{ tool: string; body: unknown }>) {
-  await page.route('**/personas/helga/approvals', (r) =>
+  await page.route('**/approvals/personas/helga', (r) =>
     r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MATRIX) }),
   );
-  // PUT /approvals/{tool} — also catches /approvals/history glob-wise, so we
-  // branch on method and let non-PUT fall through to the history route below.
-  await page.route('**/personas/helga/approvals/*', async (r) => {
-    if (r.request().method() !== 'PUT') return r.fallback();
+  await page.route('**/approvals/personas/helga/tools/*', async (r) => {
     const tool = r.request().url().split('/').pop()!.split('?')[0];
     puts.push({ tool, body: r.request().postDataJSON() });
     const orig = MATRIX.tools.find((t) => t.tool === tool)!;
@@ -101,18 +87,17 @@ async function mockApprovals(page: Page, puts: Array<{ tool: string; body: unkno
       body: JSON.stringify({ ...orig, mode: body.mode, source: 'bundle' }),
     });
   });
-  // History registered last → wins for the /approvals/history URL.
-  await page.route('**/personas/helga/approvals/history**', (r) =>
+  await page.route('**/approvals/personas/helga/history**', (r) =>
     r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(HISTORY) }),
   );
 }
 
-test('no tenant session → shows onboarding hint, no matrix', async ({ page }) => {
-  await setup(page, { withSession: false });
+test('no gateway session → shows Anmelden button, no matrix', async ({ page }) => {
+  await setup(page, { withToken: false });
   await page.goto('/personas/helga');
 
-  await expect(page.getByText(/setzt eine aktive Tenant-Sitzung voraus/i)).toBeVisible();
-  await expect(page.getByRole('link', { name: /Onboarding starten/i })).toBeVisible();
+  await expect(page.getByText(/mit deinem Pommer-Konto anmelden/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Anmelden$/i })).toBeVisible();
 });
 
 test('Freigaben tab → renders tool matrix with Allow/Ask/Deny radios', async ({ page }) => {
@@ -123,11 +108,8 @@ test('Freigaben tab → renders tool matrix with Allow/Ask/Deny radios', async (
 
   await expect(page.getByText('m365_send_email')).toBeVisible({ timeout: 5000 });
   await expect(page.getByText('delete_event')).toBeVisible();
-
-  // Counts: 2 of 3 tools are not on Allow.
   await expect(page.getByText(/2 noch nicht auf Allow/i)).toBeVisible();
 
-  // Each tool row exposes the four radio modes.
   const row = page.locator('li', { hasText: 'm365_send_email' });
   await expect(row.getByRole('radio', { name: 'Allow' })).toBeVisible();
   await expect(row.getByRole('radio', { name: 'Ask' })).toHaveAttribute('aria-checked', 'true');
@@ -153,12 +135,9 @@ test('Persona vor-freigeben → confirm dialog → PUTs all gated tools to allow
   await page.goto('/personas/helga');
 
   await page.getByRole('button', { name: 'Persona vor-freigeben' }).click();
-
-  // Confirm dialog appears with the persona name + count.
   await expect(page.getByRole('heading', { name: /Persona vor-freigeben\?/i })).toBeVisible();
   await page.getByRole('button', { name: 'Alle auf Allow' }).click();
 
-  // Both gated tools (ask + deny) get a PUT mode:allow; the already-allow one does not.
   await expect.poll(() => puts.map((p) => p.tool).sort()).toEqual(['delete_event', 'm365_send_email']);
   expect(puts.every((p) => (p.body as { mode: string }).mode === 'allow')).toBe(true);
 });
@@ -174,14 +153,13 @@ test('Verlauf tab → renders live grants + decision entries', async ({ page }) 
   await expect(page.getByText('Aktive Grants')).toBeVisible({ timeout: 5000 });
   await expect(page.getByText(/Entscheidungen \(2\)/)).toBeVisible();
   await expect(page.getByText('Policy geändert')).toBeVisible();
-  // A live grant for m365_send_email is shown with its remaining TTL.
   await expect(page.getByText(/noch 30 min/i)).toBeVisible();
 });
 
 test('approvals API error → soft fallback hint with retry', async ({ page }) => {
   await setup(page);
-  await page.route('**/personas/helga/approvals', (r) =>
-    r.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ detail: 'hermes-rest unavailable' }) }),
+  await page.route('**/approvals/personas/helga', (r) =>
+    r.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ error: 'hermes_rest_unavailable' }) }),
   );
   await page.goto('/personas/helga');
 

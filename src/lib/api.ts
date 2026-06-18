@@ -1,4 +1,5 @@
 import type { AuditReport, AvatarParams } from './wizard-state';
+import { GATEWAY_BASE, authHeader } from './gateway-auth';
 
 const API_BASE =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.PUBLIC_POMMER_API_URL) ||
@@ -235,11 +236,13 @@ export function avatarUrl(tenantId: string, personaKey: string, bust?: number): 
   return `${API_BASE}/tenants/${tenantId}/personas/${personaKey}/avatar.webp?t=${ts}`;
 }
 
-// --- Persona-Approval-Management (P86.5) ---------------------------------
+// --- Persona-Approval-Management (P86) -----------------------------------
 //
-// Proxied tenant-scoped via personas-api (:32050) → hermes-rest /admin. The
-// browser only ever holds the per-tenant bearer; the global hermes admin token
-// stays server-side. SSoT for policy is the hermes bundle — we just read/write.
+// Calls the gateway approvals BFF (GATEWAY_BASE/approvals/...). Auth is the
+// gateway JWT from the in-browser OAuth-PKCE login (gateway-auth.ts); the JWT
+// carries tenant_id, from which the gateway derives X-Pommer-Tenant-Id and
+// proxies to hermes-rest /admin with the server-side admin token. SSoT for
+// policy is the hermes bundle — we just read/write.
 
 export type ApprovalMode = 'allow' | 'ask' | 'deny' | 'recipient';
 
@@ -294,14 +297,19 @@ export interface ApprovalHistory {
   live_grants: LiveGrant[];
 }
 
-export async function getApprovals(
-  tenantId: string,
-  token: string,
-  personaKey: string,
-): Promise<ApprovalMatrix> {
-  const res = await fetch(`${API_BASE}/tenants/${tenantId}/personas/${personaKey}/approvals`, {
-    headers: authHeaders(token),
+/** Thrown on a 401 from the gateway → the UI re-initiates the PKCE login. */
+export class GatewayAuthError extends Error {
+  constructor(message = 'not authenticated') {
+    super(message);
+    this.name = 'GatewayAuthError';
+  }
+}
+
+export async function getApprovals(personaKey: string): Promise<ApprovalMatrix> {
+  const res = await fetch(`${GATEWAY_BASE}/approvals/personas/${personaKey}`, {
+    headers: authHeader(),
   });
+  if (res.status === 401) throw new GatewayAuthError();
   if (!res.ok) {
     const detail = await res.text();
     throw new Error(`Freigaben laden fehlgeschlagen (${res.status}): ${detail}`);
@@ -310,20 +318,16 @@ export async function getApprovals(
 }
 
 export async function setApproval(
-  tenantId: string,
-  token: string,
   personaKey: string,
   tool: string,
   body: ApprovalUpdate,
 ): Promise<ApprovalTool> {
-  const res = await fetch(
-    `${API_BASE}/tenants/${tenantId}/personas/${personaKey}/approvals/${tool}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
-      body: JSON.stringify(body),
-    },
-  );
+  const res = await fetch(`${GATEWAY_BASE}/approvals/personas/${personaKey}/tools/${tool}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeader() },
+    body: JSON.stringify(body),
+  });
+  if (res.status === 401) throw new GatewayAuthError();
   if (!res.ok) {
     const detail = await res.text();
     throw new Error(`Freigabe speichern fehlgeschlagen (${res.status}): ${detail}`);
@@ -332,8 +336,6 @@ export async function setApproval(
 }
 
 export async function getApprovalHistory(
-  tenantId: string,
-  token: string,
   personaKey: string,
   opts: { limit?: number; offset?: number } = {},
 ): Promise<ApprovalHistory> {
@@ -342,9 +344,10 @@ export async function getApprovalHistory(
     offset: String(opts.offset ?? 0),
   });
   const res = await fetch(
-    `${API_BASE}/tenants/${tenantId}/personas/${personaKey}/approvals/history?${params}`,
-    { headers: authHeaders(token) },
+    `${GATEWAY_BASE}/approvals/personas/${personaKey}/history?${params}`,
+    { headers: authHeader() },
   );
+  if (res.status === 401) throw new GatewayAuthError();
   if (!res.ok) {
     const detail = await res.text();
     throw new Error(`Verlauf laden fehlgeschlagen (${res.status}): ${detail}`);
