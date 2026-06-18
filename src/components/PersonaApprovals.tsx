@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'preact/hooks';
-import { loadState } from '../lib/wizard-state';
+import { isAuthenticated, startLogin } from '../lib/gateway-auth';
 import {
   getApprovals,
   setApproval,
   getApprovalHistory,
+  GatewayAuthError,
   type ApprovalMatrix,
   type ApprovalTool,
   type ApprovalMode,
@@ -11,7 +12,7 @@ import {
 } from '../lib/api';
 
 /**
- * Persona-Approval-Management (P86.5) — Claude-style Allow/Ask/Deny per tool.
+ * Persona-Approval-Management (P86) — Claude-style Allow/Ask/Deny per tool.
  *
  * Two tabs:
  *  - "Freigaben": Tool × Radio (Allow/Ask/Deny/Trusted-Empfänger) matrix; each
@@ -19,9 +20,9 @@ import {
  *    "Persona vor-freigeben" batch button that sets every gated tool to Allow.
  *  - "Verlauf": timeline of gate firings + policy changes, and active live grants.
  *
- * Auth: the per-tenant bearer from the onboarding wizard (localStorage). When
- * there is no tenant session, or the persona is not in the tenant's allowlist,
- * the surface fails soft with a hint rather than crashing the persona page.
+ * Auth: the gateway JWT from the in-browser OAuth-PKCE login (gateway-auth.ts).
+ * No session → an "Anmelden" button starts the login; a 401 mid-session
+ * (GatewayAuthError) re-initiates it. The surface fails soft otherwise.
  */
 
 const MODE_LABEL: Record<ApprovalMode, string> = {
@@ -44,22 +45,30 @@ interface Props {
 }
 
 export default function PersonaApprovals({ personaKey, personaName }: Props) {
-  const [session, setSession] = useState<{ tenantId: string; token: string } | null>(null);
+  const [authed, setAuthed] = useState<boolean | null>(null);
   const [tab, setTab] = useState<'freigaben' | 'verlauf'>('freigaben');
 
   useEffect(() => {
-    const s = loadState();
-    if (s.tenantId && s.token) setSession({ tenantId: s.tenantId, token: s.token });
+    setAuthed(isAuthenticated());
   }, []);
 
-  if (!session) {
+  if (authed === null) {
+    return <div class="text-xs text-white/40 animate-pulse">lädt …</div>;
+  }
+
+  if (!authed) {
     return (
-      <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/60">
-        Freigaben verwalten setzt eine aktive Tenant-Sitzung voraus.{' '}
-        <a href="/onboarding" class="text-indigo-300 hover:text-indigo-200 underline">
-          Onboarding starten
-        </a>
-        .
+      <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+        <p class="text-sm text-white/60">
+          Zum Verwalten der Freigaben mit deinem Pommer-Konto anmelden.
+        </p>
+        <button
+          type="button"
+          onClick={() => startLogin()}
+          class="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+        >
+          Anmelden
+        </button>
       </div>
     );
   }
@@ -89,18 +98,9 @@ export default function PersonaApprovals({ personaKey, personaName }: Props) {
 
       <div class="p-4">
         {tab === 'freigaben' ? (
-          <FreigabenTab
-            tenantId={session.tenantId}
-            token={session.token}
-            personaKey={personaKey}
-            personaName={personaName}
-          />
+          <FreigabenTab personaKey={personaKey} personaName={personaName} />
         ) : (
-          <VerlaufTab
-            tenantId={session.tenantId}
-            token={session.token}
-            personaKey={personaKey}
-          />
+          <VerlaufTab personaKey={personaKey} />
         )}
       </div>
     </div>
@@ -112,12 +112,19 @@ export default function PersonaApprovals({ personaKey, personaName }: Props) {
 // ---------------------------------------------------------------------------
 
 interface TabProps {
-  tenantId: string;
-  token: string;
   personaKey: string;
 }
 
-function FreigabenTab({ tenantId, token, personaKey, personaName }: TabProps & { personaName: string }) {
+/** A 401 anywhere → kick off re-login; returns true if it handled the error. */
+function reauthIfNeeded(e: unknown): boolean {
+  if (e instanceof GatewayAuthError) {
+    startLogin();
+    return true;
+  }
+  return false;
+}
+
+function FreigabenTab({ personaKey, personaName }: TabProps & { personaName: string }) {
   const [matrix, setMatrix] = useState<ApprovalMatrix | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null); // tool currently saving
@@ -126,11 +133,12 @@ function FreigabenTab({ tenantId, token, personaKey, personaName }: TabProps & {
   const load = useCallback(async () => {
     setError(null);
     try {
-      setMatrix(await getApprovals(tenantId, token, personaKey));
+      setMatrix(await getApprovals(personaKey));
     } catch (e) {
+      if (reauthIfNeeded(e)) return;
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [tenantId, token, personaKey]);
+  }, [personaKey]);
 
   useEffect(() => {
     load();
@@ -158,18 +166,19 @@ function FreigabenTab({ tenantId, token, personaKey, personaName }: TabProps & {
           mode === 'recipient'
             ? { mode, trusted_patterns: patterns ?? tool.trusted_patterns, match_arg: tool.match_arg ?? undefined }
             : { mode };
-        const updated = await setApproval(tenantId, token, personaKey, tool.tool, body);
+        const updated = await setApproval(personaKey, tool.tool, body);
         setMatrix((m) =>
           m ? { ...m, tools: m.tools.map((t) => (t.tool === tool.tool ? updated : t)) } : m,
         );
       } catch (e) {
+        if (reauthIfNeeded(e)) return;
         setError(e instanceof Error ? e.message : String(e));
         await load(); // re-sync on failure (revert optimistic change)
       } finally {
         setSaving(null);
       }
     },
-    [tenantId, token, personaKey, load],
+    [personaKey, load],
   );
 
   const preapproveAll = useCallback(async () => {
@@ -343,18 +352,19 @@ function ToolRow({
 // Verlauf tab — audit timeline + live grants
 // ---------------------------------------------------------------------------
 
-function VerlaufTab({ tenantId, token, personaKey }: TabProps) {
+function VerlaufTab({ personaKey }: TabProps) {
   const [history, setHistory] = useState<ApprovalHistory | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      setHistory(await getApprovalHistory(tenantId, token, personaKey, { limit: 50 }));
+      setHistory(await getApprovalHistory(personaKey, { limit: 50 }));
     } catch (e) {
+      if (reauthIfNeeded(e)) return;
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [tenantId, token, personaKey]);
+  }, [personaKey]);
 
   useEffect(() => {
     load();

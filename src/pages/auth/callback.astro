@@ -1,0 +1,44 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+/**
+ * OAuth redirect target for the in-browser PKCE login (P86). The gateway sends
+ * the browser here with ?code=…&state=…; the inline script exchanges the code
+ * for a JWT (gateway-auth.handleCallback) and returns to the originating page.
+ *
+ * Static page — all logic is client-side.
+ */
+---
+
+<Layout title="Anmeldung…" description="Anmeldung wird abgeschlossen.">
+  <main class="bg-[#0d0d1a] text-white min-h-screen flex items-center justify-center px-6">
+    <div class="text-center">
+      <div id="cb-status" class="text-sm text-white/70 animate-pulse">
+        Anmeldung wird abgeschlossen …
+      </div>
+      <div id="cb-error" class="hidden mt-3 text-sm text-red-300"></div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { handleCallback } from '../../lib/gateway-auth';
+
+  const result = await handleCallback();
+  if (result.ok) {
+    location.replace(result.returnTo || '/');
+  } else {
+    const statusEl = document.getElementById('cb-status');
+    const errEl = document.getElementById('cb-error');
+    if (statusEl) statusEl.classList.add('hidden');
+    if (errEl) {
+      errEl.classList.remove('hidden');
+      errEl.textContent = `Anmeldung fehlgeschlagen (${result.error ?? 'unbekannt'}). `;
+      const back = document.createElement('a');
+      back.href = result.returnTo || '/';
+      back.className = 'underline hover:text-red-200';
+      back.textContent = 'Zurück';
+      errEl.appendChild(back);
+    }
+  }
+</script>
