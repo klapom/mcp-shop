@@ -234,3 +234,120 @@ export function avatarUrl(tenantId: string, personaKey: string, bust?: number): 
   const ts = bust ?? Date.now();
   return `${API_BASE}/tenants/${tenantId}/personas/${personaKey}/avatar.webp?t=${ts}`;
 }
+
+// --- Persona-Approval-Management (P86.5) ---------------------------------
+//
+// Proxied tenant-scoped via personas-api (:32050) → hermes-rest /admin. The
+// browser only ever holds the per-tenant bearer; the global hermes admin token
+// stays server-side. SSoT for policy is the hermes bundle — we just read/write.
+
+export type ApprovalMode = 'allow' | 'ask' | 'deny' | 'recipient';
+
+export interface ApprovalTool {
+  tool: string;
+  mode: ApprovalMode;
+  always: string | null;
+  match_arg: string | null;
+  trusted_patterns: string[];
+  on_mismatch: string | null;
+  /** 'bundle' = explicitly set policy · 'default' = fail-closed 19-tool default. */
+  source: 'bundle' | 'default';
+}
+
+export interface ApprovalMatrix {
+  persona: string;
+  tools: ApprovalTool[];
+}
+
+export interface ApprovalUpdate {
+  mode: ApprovalMode;
+  /** recipient-mode only — forwarded verbatim to hermes. */
+  trusted_patterns?: string[];
+  match_arg?: string;
+  on_mismatch?: 'deny' | 'require_approval';
+}
+
+export interface ApprovalHistoryEntry {
+  /** 'gate_decision' (a tool firing) or 'policy_change' (a PUT). Other keys passthrough. */
+  kind?: string;
+  tool?: string;
+  decision?: string;
+  at?: string;
+  by?: string;
+  [k: string]: unknown;
+}
+
+export interface LiveGrant {
+  scope: string;
+  tool: string;
+  conversation_id: string | null;
+  ttl_seconds: number | null;
+}
+
+export interface ApprovalHistory {
+  persona: string;
+  total: number;
+  limit: number;
+  offset: number;
+  entries: ApprovalHistoryEntry[];
+  audit_enabled: boolean;
+  live_grants: LiveGrant[];
+}
+
+export async function getApprovals(
+  tenantId: string,
+  token: string,
+  personaKey: string,
+): Promise<ApprovalMatrix> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/personas/${personaKey}/approvals`, {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Freigaben laden fehlgeschlagen (${res.status}): ${detail}`);
+  }
+  return res.json() as Promise<ApprovalMatrix>;
+}
+
+export async function setApproval(
+  tenantId: string,
+  token: string,
+  personaKey: string,
+  tool: string,
+  body: ApprovalUpdate,
+): Promise<ApprovalTool> {
+  const res = await fetch(
+    `${API_BASE}/tenants/${tenantId}/personas/${personaKey}/approvals/${tool}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Freigabe speichern fehlgeschlagen (${res.status}): ${detail}`);
+  }
+  return res.json() as Promise<ApprovalTool>;
+}
+
+export async function getApprovalHistory(
+  tenantId: string,
+  token: string,
+  personaKey: string,
+  opts: { limit?: number; offset?: number } = {},
+): Promise<ApprovalHistory> {
+  const params = new URLSearchParams({
+    limit: String(opts.limit ?? 100),
+    offset: String(opts.offset ?? 0),
+  });
+  const res = await fetch(
+    `${API_BASE}/tenants/${tenantId}/personas/${personaKey}/approvals/history?${params}`,
+    { headers: authHeaders(token) },
+  );
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Verlauf laden fehlgeschlagen (${res.status}): ${detail}`);
+  }
+  return res.json() as Promise<ApprovalHistory>;
+}
