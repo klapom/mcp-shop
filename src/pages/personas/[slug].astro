@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import DailyDoing from '../../components/DailyDoing.tsx';
+import PersonaApprovals from '../../components/PersonaApprovals.tsx';
 import { PERSONAS } from '../../lib/personas.generated';
 
 /**
@@ -74,6 +75,20 @@ const { persona } = Astro.props;
           <DailyDoing personaKey={persona.key} client:load />
         </div>
       </div>
+
+      <section class="mt-10" id="freigaben">
+        <h2 class="text-lg font-semibold mb-3">Freigaben & Verlauf</h2>
+        <p class="text-sm text-white/50 mb-4 max-w-2xl">
+          Steuere, welche freigabepflichtigen Aktionen {persona.displayName} ohne
+          Rückfrage ausführen darf (Allow / Ask / Deny), und sieh dir die
+          zurückliegenden Gate-Entscheidungen an.
+        </p>
+        <PersonaApprovals
+          personaKey={persona.key}
+          personaName={persona.displayName}
+          client:load
+        />
+      </section>
     </section>
   </main>
 
