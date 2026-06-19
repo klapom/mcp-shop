@@ -75,16 +75,17 @@ export function IdentityTab({ draft, onChange }: Props) {
           </select>
         </Field>
 
-        <Field label="Reasoning">
-          <label class="flex items-center gap-2 mt-1.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={draft.reasoning}
-              onChange={(e) => onChange({ reasoning: (e.target as HTMLInputElement).checked })}
-              class="h-4 w-4 rounded accent-[#E96C00]"
-            />
-            <span class="text-sm text-white/80">Reasoning aktiviert</span>
-          </label>
+        <Field label="Reasoning (optional, z.B. low/medium/high)">
+          <input
+            type="text"
+            value={draft.reasoning ?? ''}
+            onInput={(e) => {
+              const v = (e.target as HTMLInputElement).value.trim();
+              onChange({ reasoning: v === '' ? null : v });
+            }}
+            placeholder="leer = aus"
+            class="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+          />
         </Field>
       </div>
 

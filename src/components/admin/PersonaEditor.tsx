@@ -215,7 +215,7 @@ function CreateForm({ mode, cloneFrom, onCreated, onCancel }: CreateFormProps) {
           identity_prose: '',
           baseline_ref: 'shared/baselines/default-v1.md',
           model: 'qwen36-35b',
-          reasoning: false,
+          reasoning: null,
           track_sovereign: true,
           track_microsoft: false,
           skills: [],

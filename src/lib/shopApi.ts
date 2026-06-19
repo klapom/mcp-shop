@@ -47,7 +47,7 @@ export interface PersonaSpec {
   identity_prose: string;
   baseline_ref: string;
   model: string;
-  reasoning: boolean;
+  reasoning: string | null;
   track_sovereign: boolean;
   track_microsoft: boolean;
   skills: string[];
