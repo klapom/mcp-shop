@@ -78,13 +78,23 @@ async function mockApprovals(page: Page, puts: Array<{ tool: string; body: unkno
   );
   await page.route('**/approvals/personas/helga/tools/*', async (r) => {
     const tool = r.request().url().split('/').pop()!.split('?')[0];
-    puts.push({ tool, body: r.request().postDataJSON() });
-    const orig = MATRIX.tools.find((t) => t.tool === tool)!;
     const body = r.request().postDataJSON() as { mode: string };
+    puts.push({ tool, body });
+    // Realistic hermes PUT response shape — note: NO `mode` field (the applied
+    // policy is under `applied`). The UI must keep its optimistic row state and
+    // not render from this, or the row loses its selection.
     return r.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ...orig, mode: body.mode, source: 'bundle' }),
+      body: JSON.stringify({
+        status: 'ok',
+        persona: 'helga',
+        tool,
+        applied: { always: body.mode },
+        previous: null,
+        by: 'pommer-admin',
+        reloaded: true,
+      }),
     });
   });
   await page.route('**/approvals/personas/helga/history**', (r) =>
