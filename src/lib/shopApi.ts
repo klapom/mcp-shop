@@ -1,8 +1,14 @@
 /**
  * shopApi.ts — typed client for the Shop-Config-API (H3.3)
  *
- * Base URL: PUBLIC_SHOP_API_BASE (build-time env var, default http://localhost:8090)
+ * Base URL: PUBLIC_SHOP_API_BASE (build-time env var, default `/agentfirm-api`).
+ *   Default is the SAME-ORIGIN path mount: the CF tunnel routes
+ *   shop.pommerconsulting.de/agentfirm-api/* → the agentfirm shop-api (:33400),
+ *   so the editor shares the shop's CF-Access perimeter (no public API, no CORS).
+ *   Override with a full URL for local dev (e.g. http://localhost:33400/agentfirm-api).
  * Auth: Bearer token from PUBLIC_SHOP_API_TOKEN (eval-only — see NOTE below).
+ *   With the same-origin Access-gated deploy the token is OFF on the API; CF
+ *   Access on /admin/* + /agentfirm-api/* is the write-gate.
  *
  * ⚠️  AUTH NOTE (eval-only caveat):
  *   PUBLIC_SHOP_API_TOKEN is a build-time env var — any value set here is
@@ -18,7 +24,7 @@
 
 const SHOP_API_BASE: string =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.PUBLIC_SHOP_API_BASE) ||
-  'http://localhost:8090';
+  '/agentfirm-api';
 
 const SHOP_API_TOKEN: string | null =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.PUBLIC_SHOP_API_TOKEN) || null;
