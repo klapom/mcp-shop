@@ -166,10 +166,10 @@ function FreigabenTab({ personaKey, personaName }: TabProps & { personaName: str
           mode === 'recipient'
             ? { mode, trusted_patterns: patterns ?? tool.trusted_patterns, match_arg: tool.match_arg ?? undefined }
             : { mode };
-        const updated = await setApproval(personaKey, tool.tool, body);
-        setMatrix((m) =>
-          m ? { ...m, tools: m.tools.map((t) => (t.tool === tool.tool ? updated : t)) } : m,
-        );
+        // The PUT response is NOT an ApprovalTool (no `mode` field), so we keep
+        // the optimistic row state above rather than overwriting from it — the
+        // write succeeded, so mode + source:'bundle' are already correct.
+        await setApproval(personaKey, tool.tool, body);
       } catch (e) {
         if (reauthIfNeeded(e)) return;
         setError(e instanceof Error ? e.message : String(e));

@@ -317,11 +317,26 @@ export async function getApprovals(personaKey: string): Promise<ApprovalMatrix> 
   return res.json() as Promise<ApprovalMatrix>;
 }
 
+/**
+ * hermes PUT response — note it is NOT shaped like an ApprovalTool (no `mode`
+ * field; the applied policy is under `applied`). The UI must therefore keep its
+ * optimistic tool state after a successful write rather than rendering this.
+ */
+export interface ApprovalWriteResult {
+  status: string;
+  persona: string;
+  tool: string;
+  applied: Record<string, unknown>;
+  previous: unknown;
+  by: string;
+  reloaded?: boolean;
+}
+
 export async function setApproval(
   personaKey: string,
   tool: string,
   body: ApprovalUpdate,
-): Promise<ApprovalTool> {
+): Promise<ApprovalWriteResult> {
   const res = await fetch(`${GATEWAY_BASE}/approvals/personas/${personaKey}/tools/${tool}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...authHeader() },
@@ -332,7 +347,7 @@ export async function setApproval(
     const detail = await res.text();
     throw new Error(`Freigabe speichern fehlgeschlagen (${res.status}): ${detail}`);
   }
-  return res.json() as Promise<ApprovalTool>;
+  return res.json() as Promise<ApprovalWriteResult>;
 }
 
 export async function getApprovalHistory(
