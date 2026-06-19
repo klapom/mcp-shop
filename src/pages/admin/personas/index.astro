@@ -1,0 +1,31 @@
+---
+/**
+ * Admin Persona-Editor — H4
+ *
+ * INTERN — Diese Seite ist nur über CF Access erreichbar (/admin/* ist in der
+ * Cloudflare-Access-Policy gesperrt). Die API-Kommunikation erfolgt per
+ * Bearer-Token (PUBLIC_SHOP_API_TOKEN), das zur Build-Zeit als Env-Var gesetzt
+ * wird. Das Token ist im Static-Bundle sichtbar — daher NUR für Eval/Staging
+ * geeignet. Für Produktion: Server-Side-Proxy oder CF-Worker-BFF.
+ *
+ * Die Preact-Island läuft client:only (kein SSR-Adapter, statische Seite) und
+ * holt Daten live von der Shop-Config-API (H3.3, hermes-rest :8090 /personas).
+ */
+import Layout from '../../../layouts/Layout.astro';
+import PersonaEditor from '../../../components/admin/PersonaEditor';
+---
+
+<Layout
+  title="Admin — Persona-Editor"
+  description="Internes Admin-Tool: Persona-Parameter bearbeiten (CF-Access-gated)."
+>
+  <!-- Admin-Banner -->
+  <div class="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center text-xs text-amber-300">
+    <strong>Intern</strong> — Diese Seite ist CF-Access-gated. API-Calls gehen direkt
+    an die Shop-Config-API (<code>PUBLIC_SHOP_API_BASE</code>). Eval-only-Auth: Bearer-Token ist im
+    Static-Bundle — vor Prod-Einsatz Server-Side-Proxy/CF-Worker-BFF einsetzen.
+  </div>
+
+  <!-- Client-only Preact island: dynamic CRUD, no SSR needed -->
+  <PersonaEditor client:only="preact" />
+</Layout>
