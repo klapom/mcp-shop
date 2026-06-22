@@ -14,8 +14,7 @@ import {
  * Lädt ein OT-Export (.xoo/.xop/.7z/.zip) zur tenant-isolierten Ingestion hoch
  * und zeigt den Ingestion-Report (Counts), sobald der Job fertig ist. Die Datei
  * geht direkt an die BFF (nie durch den Shop-Prozess); der Tenant kommt aus dem
- * verifizierten Gateway-JWT. Auth: kein Session → „Anmelden"; 401/403 mid-flight
- * → erneuter Login.
+ * verifizierten Gateway-JWT. Styling: Shop-CI (petrol/grau/anthrazit, hell).
  */
 
 const ACCEPT = '.xoo,.xop,.7z,.zip';
@@ -46,19 +45,22 @@ export default function PortalUpload() {
 
   const reLogin = useCallback(() => startLogin('/portal'), []);
 
-  const poll = useCallback((uploadId: string) => {
-    getUpload(uploadId)
-      .then((rec) => {
-        setRecord(rec);
-        if (!TERMINAL.includes(rec.status)) {
-          pollRef.current = setTimeout(() => poll(uploadId), POLL_MS);
-        }
-      })
-      .catch((e) => {
-        if (e instanceof GatewayAuthError) reLogin();
-        else setError(String(e?.message ?? e));
-      });
-  }, [reLogin]);
+  const poll = useCallback(
+    (uploadId: string) => {
+      getUpload(uploadId)
+        .then((rec) => {
+          setRecord(rec);
+          if (!TERMINAL.includes(rec.status)) {
+            pollRef.current = setTimeout(() => poll(uploadId), POLL_MS);
+          }
+        })
+        .catch((e) => {
+          if (e instanceof GatewayAuthError) reLogin();
+          else setError(String(e?.message ?? e));
+        });
+    },
+    [reLogin],
+  );
 
   const onFile = useCallback(
     (file: File | null) => {
@@ -92,17 +94,22 @@ export default function PortalUpload() {
   );
 
   if (authed === null) {
-    return <div class="text-xs text-white/40 animate-pulse">lädt …</div>;
+    return <div class="text-sm text-grau animate-pulse">lädt …</div>;
   }
 
   if (!authed) {
     return (
-      <button
-        onClick={reLogin}
-        class="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-400"
-      >
-        Anmelden
-      </button>
+      <div class="rounded-xl border border-[#E5E5EF] bg-white p-8 text-center">
+        <p class="mb-4 text-sm text-grau">
+          Bitte melde dich an, um deine Konfiguration hochzuladen.
+        </p>
+        <button
+          onClick={reLogin}
+          class="inline-flex items-center rounded-md bg-petrol px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-petrol-dark"
+        >
+          Anmelden
+        </button>
+      </div>
     );
   }
 
@@ -112,15 +119,15 @@ export default function PortalUpload() {
 
       {progress !== null && (
         <div>
-          <div class="mb-1 text-xs text-white/60">Hochladen … {progress}%</div>
-          <div class="h-2 w-full overflow-hidden rounded bg-white/10">
-            <div class="h-full bg-indigo-500 transition-all" style={{ width: `${progress}%` }} />
+          <div class="mb-1 text-xs text-grau">Hochladen … {progress}%</div>
+          <div class="h-2 w-full overflow-hidden rounded bg-neutral">
+            <div class="h-full bg-petrol transition-all" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}
 
       {error && (
-        <div class="rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-200">
+        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -146,14 +153,14 @@ function DropZone({ disabled, onFile }: { disabled: boolean; onFile: (f: File | 
         if (!disabled) onFile(e.dataTransfer?.files?.[0] ?? null);
       }}
       onClick={() => !disabled && inputRef.current?.click()}
-      class={`cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
-        over ? 'border-indigo-400 bg-indigo-500/10' : 'border-white/15 hover:border-white/30'
+      class={`cursor-pointer rounded-xl border-2 border-dashed bg-white p-8 text-center transition-colors ${
+        over ? 'border-petrol bg-petrol/5' : 'border-[#D8D8E4] hover:border-petrol'
       } ${disabled ? 'pointer-events-none opacity-50' : ''}`}
     >
-      <p class="text-sm text-white/80">
-        OT-Export hierher ziehen oder <span class="text-indigo-300 underline">auswählen</span>
+      <p class="text-sm text-anthrazit">
+        OT-Export hierher ziehen oder <span class="font-medium text-petrol underline">auswählen</span>
       </p>
-      <p class="mt-1 text-xs text-white/40">Unterstützt: .xoo · .xop · .7z · .zip</p>
+      <p class="mt-1 text-xs text-grau">Unterstützt: .xoo · .xop · .7z · .zip</p>
       <input
         ref={inputRef}
         type="file"
@@ -167,35 +174,33 @@ function DropZone({ disabled, onFile }: { disabled: boolean; onFile: (f: File | 
 
 function StatusPanel({ record }: { record: UploadRecord }) {
   const spinning = record.status === 'queued' || record.status === 'running';
+  const statusColor =
+    record.status === 'ready'
+      ? 'text-emerald-700'
+      : record.status === 'failed'
+        ? 'text-red-700'
+        : 'text-grau';
   return (
-    <div class="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+    <div class="rounded-xl border border-[#E5E5EF] bg-white p-4">
       <div class="flex items-center justify-between">
-        <div class="font-mono text-sm text-white/80">{record.filename}</div>
-        <span
-          class={`text-xs ${
-            record.status === 'ready'
-              ? 'text-emerald-300'
-              : record.status === 'failed'
-                ? 'text-red-300'
-                : 'text-white/60'
-          } ${spinning ? 'animate-pulse' : ''}`}
-        >
+        <div class="font-mono text-sm text-anthrazit">{record.filename}</div>
+        <span class={`text-xs ${statusColor} ${spinning ? 'animate-pulse' : ''}`}>
           {STATUS_LABEL[record.status]}
         </span>
       </div>
 
       {record.status === 'failed' && record.error && (
-        <p class="mt-3 text-sm text-red-200">{record.error}</p>
+        <p class="mt-3 text-sm text-red-700">{record.error}</p>
       )}
 
       {record.status === 'ready' && record.report && (
         <div class="mt-4">
-          <div class="mb-2 text-xs uppercase tracking-wide text-white/40">Ingestion-Report</div>
+          <div class="mb-2 text-xs uppercase tracking-wide text-grau">Ingestion-Report</div>
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {Object.entries(record.report).map(([k, v]) => (
-              <div key={k} class="rounded-lg bg-white/5 px-3 py-2">
-                <div class="text-lg font-semibold text-white">{v}</div>
-                <div class="text-xs text-white/50">{k}</div>
+              <div key={k} class="rounded-lg bg-neutral px-3 py-2">
+                <div class="text-lg font-semibold text-anthrazit">{v}</div>
+                <div class="text-xs text-grau">{k}</div>
               </div>
             ))}
           </div>

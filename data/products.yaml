@@ -80,6 +80,7 @@ products:
       screenshots: []
       pricing_note: ""
       category: ""
+      portal_url: "/portal"   # Wissensportal: tenant self-service ingestion (Portal P1)
 
   - id: "0194f4a0-0000-0000-0000-000000000004"
     slug: "fnt"

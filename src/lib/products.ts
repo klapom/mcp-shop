@@ -10,6 +10,8 @@ export interface ProductMarketing {
   screenshots: { url: string; caption: string }[];
   pricing_note: string;
   category: string;
+  /** Optional in-shop tool entry (e.g. the OT Wissensportal upload at /portal). */
+  portal_url?: string;
 }
 
 export interface Product {
