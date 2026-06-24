@@ -124,14 +124,28 @@ products:
     scopes:
       - namespace: standortiq
         scope: read
-    trial_days: 7
+    # Freemium = 3 freie Analysen (im Backend gezählt), KEIN Zeit-Trial.
+    trial_days: null
     stripe_product_id: null
-    status: draft  # wartet auf Kunden-Feedback + Namespace-Live
+    # Interaktives Freemium-Tool (3 freie Reports, dann zahlpflichtig). Live-Gang
+    # benötigt zusätzlich AP-G: Stripe-Price + checkout-session user_email-Fix.
+    status: active
     marketing:
-      tagline: ""
-      description_long: ""
-      use_cases: []
+      tagline: "Datengestützte Marktstandortanalyse für Hotellerie & Beherbergung — in Minuten zum fertigen Report."
+      description_long: >
+        StandortIQ erstellt eine kategorieabhängige Standort- und Marktanalyse für
+        Hotellerie, Beherbergung und Gastronomie. Geben Sie eine Adresse ein, wählen
+        Sie die relevanten Wettbewerber aus und ergänzen Sie Ihre Notizen —
+        StandortIQ bündelt rund 15 Datenquellen (Demografie, Kaufkraft, Tourismus,
+        Wettbewerb, Verkehr, Wirtschaft) zu einem vollständigen Word-Report inklusive
+        LLM-gestützter Standortbewertung sowie Chancen & Risiken. Die ersten drei
+        Analysen sind kostenlos.
+      use_cases:
+        - "Standortbewertung für ein geplantes Hotel- oder Beherbergungsprojekt"
+        - "Wettbewerbsumfeld einer Gemeinde strukturiert erfassen"
+        - "Nachfrage- und Tourismuspotenzial datenbasiert einschätzen"
+        - "Entscheidungsvorlage für Investoren und Betreiber"
       icon_url: ""
       screenshots: []
-      pricing_note: ""
-      category: ""
+      pricing_note: "3 Analysen kostenlos, danach im Abo."
+      category: "Standortanalyse"
