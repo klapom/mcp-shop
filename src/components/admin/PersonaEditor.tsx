@@ -32,6 +32,7 @@ import { IdentityTab } from './IdentityTab';
 import { CouplingTab } from './CouplingTab';
 import { BehaviorTab } from './BehaviorTab';
 import { ApprovalTab } from './ApprovalTab';
+import { KnowledgeTab } from './KnowledgeTab';
 import { StreamTab, HistoryTab } from './StreamTab';
 
 // ---------------------------------------------------------------------------
@@ -227,6 +228,7 @@ function CreateForm({ mode, cloneFrom, onCreated, onCancel }: CreateFormProps) {
           footer_signature: `verfasst von ${k} (KI-Agent)`,
           approval_policies: {},
           version: '',
+          knowledge: [],
         };
       }
       await putPersona(k, { ...spec, change_note: mode === 'clone' ? `Geklont von ${cloneFrom}` : 'Erstellt' });
@@ -400,6 +402,7 @@ function EditPanel({ personaKey, onSaved, onDeleted }: EditPanelProps) {
         {tab === 'coupling' && <CouplingTab draft={draft} onChange={patch} />}
         {tab === 'behavior' && <BehaviorTab draft={draft} onChange={patch} />}
         {tab === 'approval' && <ApprovalTab draft={draft} onChange={patch} />}
+        {tab === 'knowledge' && <KnowledgeTab draft={draft} onChange={patch} />}
         {tab === 'stream' && <StreamTab personaKey={personaKey} />}
         {tab === 'history' && <HistoryTab key={`${personaKey}-${historyBust}`} personaKey={personaKey} />}
       </div>
