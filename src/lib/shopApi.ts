@@ -41,6 +41,19 @@ export interface ApprovalPolicy {
   on_mismatch?: 'deny' | 'require_approval';
 }
 
+export interface KnowledgeDoc {
+  /** stable slug (filename stem), e.g. 'omnitracker-fundamentals' */
+  name: string;
+  title: string;
+  /** index line shown in the SOUL.md; server defaults to title if left empty */
+  description: string;
+  /** full markdown body */
+  body: string;
+  tags: string[];
+  /** 'A' = inline in SOUL.md (always-on), 'B' = on-demand via read_knowledge tool */
+  tier: 'A' | 'B';
+}
+
 export interface PersonaSpec {
   key: string;
   display_name: string;
@@ -60,6 +73,7 @@ export interface PersonaSpec {
   footer_signature: string;
   approval_policies: Record<string, ApprovalPolicy>;
   version: string;
+  knowledge: KnowledgeDoc[];
   change_note?: string;
 }
 

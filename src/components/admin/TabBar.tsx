@@ -6,6 +6,7 @@ export type Tab =
   | 'coupling'
   | 'behavior'
   | 'approval'
+  | 'knowledge'
   | 'stream'
   | 'history';
 
@@ -14,6 +15,7 @@ const TAB_LABELS: Record<Tab, string> = {
   coupling: 'Skills & MCPs',
   behavior: 'Verhalten',
   approval: 'Approval-Policies',
+  knowledge: 'Wissen',
   stream: 'Stream',
   history: 'Verlauf',
 };
