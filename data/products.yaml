@@ -81,6 +81,13 @@ products:
       pricing_note: ""
       category: ""
       portal_url: "/portal"   # Wissensportal: tenant self-service ingestion (Portal P1)
+      # Performance-Checkup (Track C/C-2): freemium funnel entry. Newcomers land on
+      # the OPEN quick-check (no login); the portal runs its own gateway-OAuth and
+      # handles free-run quota → paywall → Stripe checkout itself (single checkout
+      # path, portal-direct). SSO via the shared WorkOS/gateway session; no token
+      # in the URL. Returning users reach their history via the portal nav.
+      performance_portal_url: "https://app-ot-checkup.pommerconsulting.de/"
+      performance_portal_free_runs: 3
 
   - id: "0194f4a0-0000-0000-0000-000000000004"
     slug: "fnt"

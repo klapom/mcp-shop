@@ -74,12 +74,26 @@ export interface ReportSections {
   demand_gastronomie: boolean;
 }
 
+export interface JobProgressStep {
+  t: number;
+  msg: string;
+}
+
+export interface JobProgress {
+  pct: number;
+  stage: string;
+  label: string;
+  detail: string;
+  steps: JobProgressStep[];
+}
+
 export interface JobStatus {
   job_id: string;
   status: 'running' | 'completed' | 'failed';
   result: GenerateResult | null;
   error: string | null;
   elapsed_seconds?: number;
+  progress?: JobProgress;
 }
 
 // ── Errors ───────────────────────────────────────────────────────────────────

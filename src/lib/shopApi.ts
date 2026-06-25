@@ -186,3 +186,46 @@ export async function getVersions(key: string): Promise<VersionsResponse> {
 export async function getCatalog(): Promise<CatalogResponse> {
   return apiFetch('/catalog');
 }
+
+// ---------------------------------------------------------------------------
+// Avatar / Teams-package (Phase 1+2)
+// ---------------------------------------------------------------------------
+
+export interface AvatarParams {
+  gender: string;
+  age: string;
+  look: string;
+  style: string;
+  background: string;
+  extra?: string | null;
+  watermark?: boolean;
+}
+
+export interface AvatarResult {
+  key: string;
+  avatar_url: string;
+  seed_used: number;
+}
+
+/**
+ * Generate (FLUX) + store the persona avatar. Returns the avatar URL + seed.
+ * Slow — FLUX takes a few seconds.
+ */
+export async function generateAvatar(key: string, params: AvatarParams): Promise<AvatarResult> {
+  return apiFetch(`/personas/${encodeURIComponent(key)}/avatar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+/** Direct URL to the persona avatar image (for <img src>). `bust` cache-busts after regen. */
+export function avatarUrl(key: string, bust?: number): string {
+  const q = bust ? `?v=${bust}` : '';
+  return `${SHOP_API_BASE}/personas/${encodeURIComponent(key)}/avatar${q}`;
+}
+
+/** Direct download URL for the ready-to-sideload Teams app package. */
+export function teamsPackageUrl(key: string): string {
+  return `${SHOP_API_BASE}/personas/${encodeURIComponent(key)}/teams-package.zip`;
+}

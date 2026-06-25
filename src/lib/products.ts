@@ -12,6 +12,10 @@ export interface ProductMarketing {
   category: string;
   /** Optional in-shop tool entry (e.g. the OT Wissensportal upload at /portal). */
   portal_url?: string;
+  /** Optional external deep-link to the OT performance checkup portal (freemium quick-check entry). */
+  performance_portal_url?: string;
+  /** Free analyses before the portal paywall — shown on the storefront CTA. */
+  performance_portal_free_runs?: number;
 }
 
 export interface Product {

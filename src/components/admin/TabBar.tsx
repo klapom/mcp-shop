@@ -7,6 +7,7 @@ export type Tab =
   | 'behavior'
   | 'approval'
   | 'knowledge'
+  | 'avatar'
   | 'stream'
   | 'history';
 
@@ -16,6 +17,7 @@ const TAB_LABELS: Record<Tab, string> = {
   behavior: 'Verhalten',
   approval: 'Approval-Policies',
   knowledge: 'Wissen',
+  avatar: 'Bild',
   stream: 'Stream',
   history: 'Verlauf',
 };

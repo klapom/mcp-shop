@@ -33,6 +33,7 @@ import { CouplingTab } from './CouplingTab';
 import { BehaviorTab } from './BehaviorTab';
 import { ApprovalTab } from './ApprovalTab';
 import { KnowledgeTab } from './KnowledgeTab';
+import { AvatarTab } from './AvatarTab';
 import { StreamTab, HistoryTab } from './StreamTab';
 
 // ---------------------------------------------------------------------------
@@ -45,6 +46,7 @@ export default function PersonaEditor() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [showClone, setShowClone] = useState(false);
+  const [initialTab, setInitialTab] = useState<Tab | undefined>(undefined);
 
   const loadKeys = useCallback(() => {
     setKeysError(null);
@@ -54,6 +56,17 @@ export default function PersonaEditor() {
   }, []);
 
   useEffect(loadKeys, [loadKeys]);
+
+  // Deep-link support: /admin/personas?persona=<key>&tab=avatar — so Helga can post
+  // a direct link to a persona's avatar config in the chat.
+  useEffect(() => {
+    if (typeof location === 'undefined') return;
+    const q = new URLSearchParams(location.search);
+    const persona = q.get('persona');
+    const tab = q.get('tab');
+    if (persona) setSelectedKey(persona);
+    if (tab) setInitialTab(tab as Tab);
+  }, []);
 
   function handleSaved(key: string) {
     loadKeys();
@@ -127,6 +140,7 @@ export default function PersonaEditor() {
                       type="button"
                       onClick={() => {
                         setSelectedKey(k);
+                        setInitialTab(undefined); // manual nav → default tab
                         setShowCreate(false);
                         setShowClone(false);
                       }}
@@ -165,6 +179,7 @@ export default function PersonaEditor() {
               <EditPanel
                 key={selectedKey}
                 personaKey={selectedKey}
+                initialTab={initialTab}
                 onSaved={handleSaved}
                 onDeleted={handleDeleted}
               />
@@ -285,15 +300,16 @@ function CreateForm({ mode, cloneFrom, onCreated, onCancel }: CreateFormProps) {
 
 interface EditPanelProps {
   personaKey: string;
+  initialTab?: Tab;
   onSaved: (key: string) => void;
   onDeleted: () => void;
 }
 
-function EditPanel({ personaKey, onSaved, onDeleted }: EditPanelProps) {
+function EditPanel({ personaKey, initialTab, onSaved, onDeleted }: EditPanelProps) {
   const [spec, setSpec] = useState<PersonaSpec | null>(null);
   const [draft, setDraft] = useState<PersonaSpec | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('identity');
+  const [tab, setTab] = useState<Tab>(initialTab ?? 'identity');
   const [changeNote, setChangeNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -309,7 +325,7 @@ function EditPanel({ personaKey, onSaved, onDeleted }: EditPanelProps) {
     setLoadError(null);
     setSaveError(null);
     setSaveSuccess(false);
-    setTab('identity');
+    setTab(initialTab ?? 'identity');
     getPersona(personaKey)
       .then((p) => {
         setSpec(p);
@@ -403,12 +419,13 @@ function EditPanel({ personaKey, onSaved, onDeleted }: EditPanelProps) {
         {tab === 'behavior' && <BehaviorTab draft={draft} onChange={patch} />}
         {tab === 'approval' && <ApprovalTab draft={draft} onChange={patch} />}
         {tab === 'knowledge' && <KnowledgeTab draft={draft} onChange={patch} />}
+        {tab === 'avatar' && <AvatarTab personaKey={personaKey} displayName={draft.display_name} />}
         {tab === 'stream' && <StreamTab personaKey={personaKey} />}
         {tab === 'history' && <HistoryTab key={`${personaKey}-${historyBust}`} personaKey={personaKey} />}
       </div>
 
       {/* Save bar */}
-      {tab !== 'stream' && tab !== 'history' && (
+      {tab !== 'stream' && tab !== 'history' && tab !== 'avatar' && (
         <div class="border-t border-white/10 px-5 py-3">
           <div class="flex items-center gap-3">
             <input
