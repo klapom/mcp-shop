@@ -6,7 +6,7 @@
  *
  * Endpoint contract: HOGA_V2/docs/SHOP_INTEGRATION_PLAN.md.
  */
-import { authHeader } from './gateway-auth';
+import { authHeader, ensureFreshToken, refreshAccessToken } from './gateway-auth';
 
 export const STANDORTIQ_API: string =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.PUBLIC_STANDORTIQ_API_URL) ||
@@ -124,10 +124,29 @@ function headers(): Record<string, string> {
   return { 'Content-Type': 'application/json', ...h };
 }
 
+/**
+ * fetch with the gateway JWT attached, transparently recovering from a 15-min
+ * access-token expiry: refresh proactively when it is near expiry, and on a 401
+ * mint a new token from the refresh token and retry the request once. Only when
+ * the refresh itself fails does the caller see an AuthError. DEV_TOKEN mode
+ * (local) has no refresh path, so it falls straight through.
+ */
+async function authedFetch(url: string, init: RequestInit): Promise<Response> {
+  if (!DEV_TOKEN) await ensureFreshToken();
+  const withAuth = (): RequestInit => ({
+    ...init,
+    headers: { ...(init.headers as Record<string, string>), ...headers() },
+  });
+  let res = await fetch(url, withAuth());
+  if (res.status === 401 && !DEV_TOKEN && (await refreshAccessToken())) {
+    res = await fetch(url, withAuth());
+  }
+  return res;
+}
+
 async function post(tool: string, body: unknown): Promise<any> {
-  const res = await fetch(`${STANDORTIQ_API}/api/v2/${tool}`, {
+  const res = await authedFetch(`${STANDORTIQ_API}/api/v2/${tool}`, {
     method: 'POST',
-    headers: headers(),
     body: JSON.stringify(body),
   });
   if (res.status === 401) throw new AuthError();
@@ -185,7 +204,7 @@ export async function startGeneration(input: {
 }
 
 export async function pollJob(jobId: string): Promise<JobStatus> {
-  const res = await fetch(`${STANDORTIQ_API}/api/v2/jobs/${jobId}`, { headers: headers() });
+  const res = await authedFetch(`${STANDORTIQ_API}/api/v2/jobs/${jobId}`, { method: 'GET' });
   if (res.status === 401) throw new AuthError();
   if (!res.ok) throw new Error(`Status-Abfrage fehlgeschlagen (${res.status})`);
   return (await res.json()) as JobStatus;

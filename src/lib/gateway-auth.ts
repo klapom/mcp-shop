@@ -23,6 +23,8 @@ const CLIENT_ID: string =
   'Z1oL7KIihUxtk7n83VCQEpKBPENlGInvoJsaoIG6fHo';
 
 const TOKEN_KEY = 'pommer_gw_token';
+const REFRESH_KEY = 'pommer_gw_refresh';
+const EXP_KEY = 'pommer_gw_exp'; // access-token expiry, epoch ms
 const VERIFIER_KEY = 'pommer_gw_pkce_verifier';
 const STATE_KEY = 'pommer_gw_oauth_state';
 const RETURN_KEY = 'pommer_gw_return_to';
@@ -53,11 +55,84 @@ export function isAuthenticated(): boolean {
 
 export function logout(): void {
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(EXP_KEY);
 }
 
 export function authHeader(): Record<string, string> {
   const t = getToken();
   return t ? { Authorization: `Bearer ${t}` } : {};
+}
+
+// ── Token refresh ────────────────────────────────────────────────────────────
+// The gateway access token lives only 15 min; a report run (wizard + minutes of
+// generation) easily outlives it, so polling would 401 mid-flight. We persist
+// the refresh token (30-day TTL) and silently mint a new access token. Refresh
+// tokens ROTATE on use and reuse revokes the whole family, so refreshes must be
+// single-flight — concurrent callers share one in-flight promise.
+
+function storeTokens(accessToken: string, refreshToken?: string, expiresIn?: number): void {
+  localStorage.setItem(TOKEN_KEY, accessToken);
+  if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+  if (expiresIn) localStorage.setItem(EXP_KEY, String(Date.now() + expiresIn * 1000));
+}
+
+/** Seconds until the access token expires, or null if unknown. */
+export function tokenSecondsLeft(): number | null {
+  const exp = localStorage.getItem(EXP_KEY);
+  if (!exp) return null;
+  return Math.round((Number(exp) - Date.now()) / 1000);
+}
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+/** Mint a fresh access token from the stored refresh token. Returns false (and
+ *  clears the session) if no refresh token / the gateway rejects it. */
+export async function refreshAccessToken(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+  const doRefresh = async (): Promise<boolean> => {
+    const rt = localStorage.getItem(REFRESH_KEY);
+    if (!rt) return false;
+    try {
+      const res = await fetch(`${GATEWAY_BASE}/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: rt,
+          client_id: CLIENT_ID,
+        }),
+      });
+      if (!res.ok) {
+        // invalid_grant (expired/revoked/reused) → session is unrecoverable.
+        if (res.status === 400 || res.status === 401) logout();
+        return false;
+      }
+      const d = (await res.json()) as {
+        access_token?: string;
+        refresh_token?: string;
+        expires_in?: number;
+      };
+      if (!d.access_token) return false;
+      storeTokens(d.access_token, d.refresh_token, d.expires_in);
+      return true;
+    } catch {
+      return false; // network blip — keep the (stale) token, caller may retry
+    }
+  };
+  refreshInFlight = doRefresh().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+/** Ensure a usable access token, refreshing proactively when it is about to
+ *  expire (default < 90 s left). Returns true if a token should now be valid. */
+export async function ensureFreshToken(minSecondsLeft = 90): Promise<boolean> {
+  if (!getToken()) return false;
+  const left = tokenSecondsLeft();
+  if (left !== null && left < minSecondsLeft) return refreshAccessToken();
+  return true;
 }
 
 /** Begin the PKCE login. Redirects the browser; `returnTo` is restored after. */
@@ -116,10 +191,14 @@ export async function handleCallback(): Promise<CallbackResult> {
   if (!res.ok) {
     return { ok: false, error: `token_exchange_${res.status}`, returnTo };
   }
-  const data = (await res.json()) as { access_token?: string };
+  const data = (await res.json()) as {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+  };
   if (!data.access_token) return { ok: false, error: 'no_access_token', returnTo };
 
-  localStorage.setItem(TOKEN_KEY, data.access_token);
+  storeTokens(data.access_token, data.refresh_token, data.expires_in);
   sessionStorage.removeItem(VERIFIER_KEY);
   sessionStorage.removeItem(STATE_KEY);
   sessionStorage.removeItem(RETURN_KEY);

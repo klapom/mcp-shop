@@ -154,14 +154,22 @@ export default function StandortiqTool() {
   }
 
   const poll = useCallback(async (jobId: string) => {
+    let transient = 0; // tolerate brief network/5xx blips — the job runs server-side
     for (;;) {
       let job;
       try {
         job = await pollJob(jobId);
+        transient = 0;
       } catch (e) {
-        handleError(e);
-        setLoading(false);
-        return;
+        // Auth (refresh already failed) and quota are terminal; anything else
+        // is likely a transient blip — keep polling, the backend job continues.
+        if (e instanceof AuthError || e instanceof QuotaExceededError || ++transient > 5) {
+          handleError(e);
+          setLoading(false);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 3000));
+        continue;
       }
       if (job.status === 'completed' && job.result) {
         setResult(job.result);
