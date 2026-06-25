@@ -11,6 +11,7 @@ import {
   saveSelection,
   startGeneration,
   type GenerateResult,
+  type JobProgress,
   type PreparedSite,
   type ReportSection,
 } from '../../lib/standortiq-api';
@@ -54,6 +55,8 @@ export default function StandortiqTool() {
   const [notes, setNotes] = useState('');
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [progressMsg, setProgressMsg] = useState('');
+  const [progress, setProgress] = useState<JobProgress | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -170,8 +173,9 @@ export default function StandortiqTool() {
         setLoading(false);
         return;
       }
+      if (job.progress) setProgress(job.progress);
       setProgressMsg(`Läuft … (${job.elapsed_seconds ? Math.round(job.elapsed_seconds) + 's' : 'gestartet'})`);
-      await new Promise((r) => setTimeout(r, 3000));
+      await new Promise((r) => setTimeout(r, 2000));
     }
   }, []);
 
@@ -182,6 +186,8 @@ export default function StandortiqTool() {
     setPaywall(null);
     setAuthNeeded(false);
     setStep(3);
+    setProgress(null);
+    setShowDetails(false);
     setProgressMsg('Job wird gestartet …');
     const selectedPlain: Record<string, string[]> = {};
     for (const [subcat, set] of Object.entries(selected)) {
@@ -239,6 +245,8 @@ export default function StandortiqTool() {
     setNotes('');
     setResult(null);
     setProgressMsg('');
+    setProgress(null);
+    setShowDetails(false);
   }
 
   // ── Auth gate ───────────────────────────────────────────────────────────
@@ -476,10 +484,55 @@ export default function StandortiqTool() {
         <div>
           <h3 class="mb-4 text-lg font-bold text-[#1A1A2E]">Report</h3>
           {loading && (
-            <div class="flex items-center gap-3 text-sm text-[#6B6B8A]">
-              <span class="h-4 w-4 animate-spin rounded-full border-2 border-[#005F73] border-t-transparent" />
-              {progressMsg || 'Report wird generiert …'}
-              <span class="text-xs text-[#B0B0C0]">(dauert i. d. R. einige Minuten)</span>
+            <div>
+              <div class="mb-2 flex items-center gap-3 text-sm text-[#1A1A2E]">
+                <span class="h-4 w-4 animate-spin rounded-full border-2 border-[#005F73] border-t-transparent" />
+                <span class="font-medium">{progress?.label || 'Report wird generiert …'}</span>
+                {progress && <span class="text-xs text-[#6B6B8A]">{progress.pct}%</span>}
+              </div>
+
+              {/* Progress bar */}
+              <div class="h-2 w-full overflow-hidden rounded-full bg-[#F4F4F8]">
+                <div
+                  class="h-full rounded-full bg-[#16BAE7] transition-[width] duration-500"
+                  style={{ width: `${Math.max(3, progress?.pct ?? 3)}%` }}
+                />
+              </div>
+
+              <div class="mt-2 flex items-center justify-between text-xs text-[#6B6B8A]">
+                <span>{progress?.detail || progressMsg || 'läuft …'}</span>
+                {progress && progress.steps.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDetails((v) => !v)}
+                    class="font-medium text-[#005F73] hover:underline"
+                  >
+                    {showDetails ? 'Details ausblenden' : 'Details anzeigen'}
+                  </button>
+                )}
+              </div>
+
+              {showDetails && progress && progress.steps.length > 0 && (
+                <ol class="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg border border-[#E0E0EA] bg-[#FAFAFC] p-3 text-xs">
+                  {progress.steps.map((s, i) => {
+                    const last = i === progress.steps.length - 1;
+                    return (
+                      <li class="flex items-baseline gap-2">
+                        <span class="tabular-nums text-[#B0B0C0]">{s.t.toFixed(0)}s</span>
+                        <span class={last ? 'text-[#005F73]' : 'text-[#6B6B8A]'}>
+                          {last ? '▸ ' : '✓ '}
+                          {s.msg}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+
+              <p class="mt-3 text-xs text-[#B0B0C0]">
+                Die Generierung umfasst Datenabruf, KI-Texte, Layout und Qualitätsprüfung —
+                das dauert i. d. R. einige Minuten.
+              </p>
             </div>
           )}
           {error && (
