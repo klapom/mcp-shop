@@ -215,12 +215,17 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
             <p class="text-xs text-[#6B6B8A] mb-4">
               Lade act.log / .otprofile / .mdb hoch und erhalte eine automatische
               Performance-Analyse deines OMNITRACKER-Systems.
+              {product.marketing.performance_portal_free_runs && (
+                <span class="block mt-2 font-medium text-[#005F73]">
+                  {product.marketing.performance_portal_free_runs} Analysen gratis &mdash; danach jederzeit freischaltbar.
+                </span>
+              )}
             </p>
             <a
               href={product.marketing.performance_portal_url}
               class="w-full block text-center py-3 px-4 rounded-md bg-[#005F73] text-white font-semibold text-sm hover:bg-[#003845] transition-colors"
             >
-              Performance-Analyse starten
+              Kostenlosen Performance-Check starten
             </a>
           </div>
         )}
