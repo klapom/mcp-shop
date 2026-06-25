@@ -81,6 +81,10 @@ products:
       pricing_note: ""
       category: ""
       portal_url: "/portal"   # Wissensportal: tenant self-service ingestion (Portal P1)
+      # Performance-Checkup (Track C): logged-in deep-link into the OT performance portal.
+      # The portal runs its own gateway-OAuth; SSO via the shared WorkOS/gateway session.
+      # No token is passed in the URL.
+      performance_portal_url: "https://app-ot-checkup.pommerconsulting.de/auth/login?return=/meine-analysen"
 
   - id: "0194f4a0-0000-0000-0000-000000000004"
     slug: "fnt"
