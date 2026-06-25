@@ -56,6 +56,7 @@ export default function StandortiqTool() {
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [progressMsg, setProgressMsg] = useState('');
   const [progress, setProgress] = useState<JobProgress | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
 
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -182,6 +183,7 @@ export default function StandortiqTool() {
         return;
       }
       if (job.progress) setProgress(job.progress);
+      if (typeof job.elapsed_seconds === 'number') setElapsed(Math.round(job.elapsed_seconds));
       setProgressMsg(`Läuft … (${job.elapsed_seconds ? Math.round(job.elapsed_seconds) + 's' : 'gestartet'})`);
       await new Promise((r) => setTimeout(r, 2000));
     }
@@ -195,6 +197,7 @@ export default function StandortiqTool() {
     setAuthNeeded(false);
     setStep(3);
     setProgress(null);
+    setElapsed(0);
     setShowDetails(false);
     setProgressMsg('Job wird gestartet …');
     const selectedPlain: Record<string, string[]> = {};
@@ -254,6 +257,7 @@ export default function StandortiqTool() {
     setResult(null);
     setProgressMsg('');
     setProgress(null);
+    setElapsed(0);
     setShowDetails(false);
   }
 
@@ -496,7 +500,11 @@ export default function StandortiqTool() {
               <div class="mb-2 flex items-center gap-3 text-sm text-[#1A1A2E]">
                 <span class="h-4 w-4 animate-spin rounded-full border-2 border-[#005F73] border-t-transparent" />
                 <span class="font-medium">{progress?.label || 'Report wird generiert …'}</span>
-                {progress && <span class="text-xs text-[#6B6B8A]">{progress.pct}%</span>}
+                {progress && (
+                  <span class="text-xs text-[#6B6B8A]">
+                    {progress.pct}%{elapsed > 0 ? ` · ${elapsed}s` : ''}
+                  </span>
+                )}
               </div>
 
               {/* Progress bar */}
@@ -523,14 +531,20 @@ export default function StandortiqTool() {
               {showDetails && progress && progress.steps.length > 0 && (
                 <ol class="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg border border-[#E0E0EA] bg-[#FAFAFC] p-3 text-xs">
                   {progress.steps.map((s, i) => {
-                    const last = i === progress.steps.length - 1;
+                    // Each entry is a completed milestone (✓). Show the time
+                    // THIS step took (delta from the previous milestone) on its
+                    // own line — the absolute clock made the duration look like
+                    // it belonged to the next line. Latest one is just colour-
+                    // highlighted; "what's running now" lives in the bar above.
+                    const prev = i > 0 ? progress.steps[i - 1].t : 0;
+                    const dur = Math.max(0, s.t - prev);
+                    const latest = i === progress.steps.length - 1;
                     return (
                       <li class="flex items-baseline gap-2">
-                        <span class="tabular-nums text-[#B0B0C0]">{s.t.toFixed(0)}s</span>
-                        <span class={last ? 'text-[#005F73]' : 'text-[#6B6B8A]'}>
-                          {last ? '▸ ' : '✓ '}
-                          {s.msg}
+                        <span class="w-9 shrink-0 text-right tabular-nums text-[#B0B0C0]">
+                          {dur >= 1 ? `${dur.toFixed(0)}s` : ''}
                         </span>
+                        <span class={latest ? 'text-[#005F73]' : 'text-[#6B6B8A]'}>✓ {s.msg}</span>
                       </li>
                     );
                   })}
