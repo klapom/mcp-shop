@@ -41,6 +41,7 @@ jobs:
           SITE_URL: https://shop.pommerconsulting.de
           GATEWAY_URL: https://mcp.pommerconsulting.de
           PUBLIC_POMMER_API_URL: https://personas-api.pommerconsulting.de
+          PUBLIC_PORTAL_BFF_URL: https://api-ot-context.pommerconsulting.de
 
       - name: Smoke test — all product pages built
         run: |
