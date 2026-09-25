@@ -76,6 +76,27 @@ function fixtures() {
       pr: 'https://github.com/klapom/agent-firm-V1/pull/99',
       rollout_pending: 'Rollout ausstehend: Haupt-Checkout nicht auf sauberem main',
     }),
+    // H8.14e: new-style rejection (zone-aware UTC stamp + actor from the Access JWT)
+    'helga/mail-folder-enumeration': item('helga', 'mail-folder-enumeration', {
+      state: 'rejected',
+      reason: 'auch nicht OK',
+      rejected_at: '2026-09-25T05:22:15+00:00',
+      rejected_by: 'klaus.pommer@pommerconsulting.de',
+    }),
+    // legacy rejection: naive host-local stamp, no actor
+    'helga/hr-alt': item('helga', 'hr-alt', {
+      state: 'rejected',
+      reason: 'not ok',
+      rejected_at: '2026-09-25T07:21:24',
+    }),
+    // legacy stamps exactly as measured on 2026-09-25: collected = naive host-local,
+    // reported = naive UTC from the container → "gemeldet" used to look earlier than "gesammelt"
+    'helga/zeiten-alt': item('helga', 'zeiten-alt', {
+      collected_at: '2026-09-24T22:28:34',
+      reported_at: '2026-09-24T20:36:35',
+      edited_at: '2026-09-25T06:10:00+00:00',
+      edited_by: 'klaus.pommer@pommerconsulting.de',
+    }),
   };
   const files: Record<string, any[]> = {
     'helga/hr-onboarding-email': [
@@ -101,6 +122,13 @@ function fixtures() {
       at: '2026-09-20T10:00:00Z',
       repeats: 2,
       reported: 1,
+    },
+    'ferdinand/x-shell': {
+      reason: 'Angriffsmuster',
+      at: '2026-09-25T04:00:00+00:00',
+      by: 'cli:admin',
+      repeats: 0,
+      reported: 0,
     },
   };
   return { items, files, piiHits, rejected };
@@ -140,8 +168,10 @@ async function mockApi(page: Page, opts: MockOpts = {}) {
       return json(200, { proposals: Object.values(fx.items), rejected: fx.rejected, repo_index: [] });
     }
     const key = `${parts[0]}/${parts[1]}`;
+    if (key === 'helga/kaputt') return json(500, { detail: 'interner Fehler' });
     const it = fx.items[key];
-    if (!it) return json(404, { detail: 'Entwurf nicht gefunden' });
+    // same text the real API answers (store.draft_dir)
+    if (!it) return json(404, { detail: `Entwurf ${key} nicht gefunden` });
     const action = parts[2];
 
     if (!action && method === 'GET') {
@@ -174,7 +204,9 @@ async function mockApi(page: Page, opts: MockOpts = {}) {
     if (action === 'reject' && method === 'POST') {
       it.state = 'rejected';
       it.reason = body.reason;
-      return json(200, { state: 'rejected', reason: body.reason });
+      it.rejected_at = '2026-09-25T05:21:24+00:00';
+      it.rejected_by = 'klaus.pommer@pommerconsulting.de';
+      return json(200, { state: 'rejected', reason: body.reason, rejected_at: it.rejected_at, rejected_by: it.rejected_by });
     }
     if (action === 'adopt' && method === 'POST') {
       const r = opts.adopt ? opts.adopt(key) : { status: 202, body: { state: 'adopting', job: { status: 'running' } } };
@@ -349,6 +381,82 @@ test('Ablehnen ist ohne Grund deaktiviert, mit Grund schickt es POST reject', as
     body: { reason: 'doppelt zu hr-onboarding' },
   });
   await expect(page.getByTestId('detail-title').locator('..').getByTestId('state-badge')).toHaveText('abgelehnt');
+  await expect(page.getByTestId('hint-rejected')).toHaveText(
+    'Abgelehnt am 25.09.2026, 07:21 von klaus.pommer@pommerconsulting.de — Grund: doppelt zu hr-onboarding',
+  );
+});
+
+// ---------------------------------------------------------------------------
+// H8.14e: wer und wann — Europe/Berlin, deutsches Format, Altwerte dokumentiert gelesen
+// ---------------------------------------------------------------------------
+
+test.describe('Wer/Wann-Anzeige (Browser-Zeitzone absichtlich New York)', () => {
+  // Display must not depend on the viewer's zone: always Europe/Berlin.
+  test.use({ timezoneId: 'America/New_York' });
+
+  test('Liste: Abgelehnt am … von … — Grund; Altwert ohne by nur mit Datum', async ({ page }) => {
+    await mockApi(page);
+    await page.goto(APP);
+    await expect(page.getByTestId('proposal-helga-mail-folder-enumeration').getByTestId('hint-rejected')).toHaveText(
+      'Abgelehnt am 25.09.2026, 07:22 von klaus.pommer@pommerconsulting.de — Grund: auch nicht OK',
+    );
+    const old = page.getByTestId('proposal-helga-hr-alt').getByTestId('hint-rejected');
+    await expect(old).toHaveText('Abgelehnt am 25.09.2026, 07:21 — Grund: not ok');
+    await expect(old.locator('time')).toHaveAttribute('title', /Ortszeit Europe\/Berlin/);
+
+    const rej = page.getByTestId('rejected-list');
+    const cli = rej.locator('tr', { hasText: 'ferdinand/x-shell' });
+    await expect(cli).toContainText('25.09.2026, 06:00'); // 04:00 UTC = 06:00 CEST
+    await expect(cli).toContainText('admin (CLI)');
+    const legacy = rej.locator('tr', { hasText: 'helga/geburtstagsliste' });
+    await expect(legacy).toContainText('20.09.2026, 12:00'); // …T10:00:00Z
+    await expect(legacy.locator('td').nth(3)).toHaveText('—'); // no "von" for old entries
+  });
+
+  test('Detail: gesammelt/gemeldet in Europe/Berlin — gemeldet nicht mehr vor gesammelt', async ({ page }) => {
+    await mockApi(page);
+    await page.goto(`${APP}?p=helga&s=zeiten-alt`);
+    const times = page.getByTestId('detail-times');
+    await expect(times).toHaveText(
+      'gesammelt 24.09.2026, 22:28 · gemeldet 24.09.2026, 22:36 · bearbeitet 25.09.2026, 08:10 von klaus.pommer@pommerconsulting.de',
+    );
+    await expect(times.getByTestId('when-reported_at')).toHaveAttribute('title', /als UTC gelesen/);
+    await expect(times.getByTestId('when-edited_at')).not.toHaveAttribute('title', /.+/);
+  });
+
+  test('Detail eines abgelehnten Entwurfs zeigt wer und wann', async ({ page }) => {
+    await mockApi(page);
+    await page.goto(`${APP}?p=helga&s=mail-folder-enumeration`);
+    await expect(page.getByTestId('hint-rejected')).toHaveText(
+      'Abgelehnt am 25.09.2026, 07:22 von klaus.pommer@pommerconsulting.de — Grund: auch nicht OK',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// H8.14e: nicht (mehr) vorhandener Entwurf
+// ---------------------------------------------------------------------------
+
+test('404: verständliche Meldung + Link zur Liste statt API-Fehlertext', async ({ page }) => {
+  const { calls } = await mockApi(page);
+  await page.goto(`${APP}?p=helga&s=h814-testentwurf`);
+  const box = page.getByTestId('load-error');
+  await expect(box).toContainText('Diesen Entwurf gibt es nicht mehr (gelöscht oder nie gesammelt)');
+  await expect(box).toContainText('helga/h814-testentwurf');
+  await expect(box).not.toContainText('HTTP 404');
+  await expect(box).not.toContainText('konnte nicht geladen werden');
+  await expect(box.getByTestId('back-to-list')).toHaveAttribute('href', '/admin/skills/');
+  expect(calls.some((c) => c.path.endsWith('/skill-proposals/helga/h814-testentwurf'))).toBe(true);
+  await box.getByTestId('back-to-list').click();
+  await expect(page.getByTestId('group-helga')).toBeVisible();
+});
+
+test('Gegenprobe: andere Fehler (500) behalten die technische Meldung', async ({ page }) => {
+  await mockApi(page);
+  await page.goto(`${APP}?p=helga&s=kaputt`);
+  const box = page.getByTestId('load-error');
+  await expect(box).toContainText('konnte nicht geladen werden: interner Fehler (HTTP 500)');
+  await expect(box).not.toContainText('gibt es nicht mehr');
 });
 
 test('Übernehmen startet den Job und zeigt das Job-Log bis zum Ende', async ({ page }) => {

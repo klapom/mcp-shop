@@ -21,22 +21,28 @@ import {
   startRollout,
   ProposalApiError,
   OPEN_STATES,
+  formatActor,
   type ProposalDetail,
   type DraftFile,
   type JobStatus,
 } from '../../lib/skillProposalsApi';
-import { StateBadge, ScanLights, ItemHints, ReviewBox } from './SkillProposalsList';
+import { StateBadge, ScanLights, ItemHints, ReviewBox, When } from './SkillProposalsList';
 
 const POLL_MS = 1500;
 
 interface ErrorInfo {
   message: string;
   problems: string[];
+  status?: number;
 }
 
 function toErrorInfo(e: unknown): ErrorInfo {
   if (e instanceof ProposalApiError) {
-    return { message: e.status ? `${e.message} (HTTP ${e.status})` : e.message, problems: e.problems };
+    return {
+      message: e.status ? `${e.message} (HTTP ${e.status})` : e.message,
+      problems: e.problems,
+      status: e.status,
+    };
   }
   return { message: e instanceof Error ? e.message : String(e), problems: [] };
 }
@@ -127,6 +133,23 @@ export default function SkillProposalsDetail({ persona, name }: { persona: strin
     };
   }, [polling, persona, name, load]);
 
+  if (loadError?.status === 404) {
+    // Normal case after a test draft was removed or for a link to a never-collected name —
+    // not an error of the page, so no raw API text.
+    return (
+      <div class="rounded-xl border border-white/10 bg-white/5 p-5 text-sm text-white/70" data-testid="load-error">
+        <div>
+          Diesen Entwurf gibt es nicht mehr (gelöscht oder nie gesammelt):{' '}
+          <span class="font-mono">
+            {persona}/{name}
+          </span>
+        </div>
+        <a href="/admin/skills/" class="mt-2 inline-block text-sky-300 underline" data-testid="back-to-list">
+          Zur Liste der Skill-Vorschläge
+        </a>
+      </div>
+    );
+  }
   if (loadError) {
     return (
       <div class="rounded-xl border border-red-700/30 bg-red-900/20 p-5 text-sm text-red-200" data-testid="load-error">
@@ -161,17 +184,45 @@ export default function SkillProposalsDetail({ persona, name }: { persona: strin
           <StateBadge state={detail.state} />
           <ScanLights scan={detail.scan} />
         </div>
-        <div class="mt-1 text-[11px] text-white/40">
-          gesammelt {detail.collected_at ?? '—'}
-          {detail.reported_at && <> · gemeldet {detail.reported_at}</>}
-          {detail.edited_at && <> · bearbeitet {detail.edited_at}</>}
+        <div class="mt-1 text-[11px] text-white/40" data-testid="detail-times">
+          gesammelt <When value={detail.collected_at} field="collected_at" />
+          {detail.reported_at && (
+            <>
+              {' '}· gemeldet <When value={detail.reported_at} field="reported_at" />
+            </>
+          )}
+          {detail.edited_at && (
+            <>
+              {' '}· bearbeitet <When value={detail.edited_at} field="edited_at" />
+              {detail.edited_by && <> von {formatActor(detail.edited_by)}</>}
+            </>
+          )}
+          {detail.adopted_by && (
+            <>
+              {' '}· Übernahme gestartet <When value={detail.adopted_at} field="adopted_at" /> von{' '}
+              {formatActor(detail.adopted_by)}
+            </>
+          )}
+          {detail.rollout_by && (
+            <>
+              {' '}· Rollout gestartet <When value={detail.rollout_at} field="rollout_at" /> von{' '}
+              {formatActor(detail.rollout_by)}
+            </>
+          )}
         </div>
         <div class="mt-3 space-y-1">
           <ReviewBox review={detail.review} />
           <ItemHints item={detail} />
           {detail.rejected_entry && state !== 'rejected' && (
             <div class="text-xs text-amber-300/80">
-              Dieser Name steht auf der Ablehnungsliste: {detail.rejected_entry.reason}
+              Dieser Name steht auf der Ablehnungsliste
+              {detail.rejected_entry.at && (
+                <>
+                  {' '}(abgelehnt am <When value={detail.rejected_entry.at} field="at" />
+                  {detail.rejected_entry.by && <> von {formatActor(detail.rejected_entry.by)}</>})
+                </>
+              )}
+              : {detail.rejected_entry.reason}
             </div>
           )}
         </div>
