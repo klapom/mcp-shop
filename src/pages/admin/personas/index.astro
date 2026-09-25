@@ -13,6 +13,7 @@
  */
 import Layout from '../../../layouts/Layout.astro';
 import PersonaEditor from '../../../components/admin/PersonaEditor';
+import AdminNav from '../../../components/admin/AdminNav.astro';
 ---
 
 <Layout
@@ -25,6 +26,7 @@ import PersonaEditor from '../../../components/admin/PersonaEditor';
     an die Shop-Config-API (<code>PUBLIC_SHOP_API_BASE</code>). Eval-only-Auth: Bearer-Token ist im
     Static-Bundle — vor Prod-Einsatz Server-Side-Proxy/CF-Worker-BFF einsetzen.
   </div>
+  <AdminNav active="personas" />
 
   <!-- Client-only Preact island: dynamic CRUD, no SSR needed -->
   <PersonaEditor client:only="preact" />

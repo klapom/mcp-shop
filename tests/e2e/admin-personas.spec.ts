@@ -10,14 +10,16 @@ const APP = 'http://localhost:4321/admin/personas/';
 
 test.beforeEach(async ({ page }) => {
   // These tests need the live agentfirm shop-api on :33400 (local/staging).
-  // In CI (no backend) skip rather than fail.
+  // In CI (no backend) skip rather than fail. Since H8.14 the API requires a Cloudflare-Access
+  // JWT on every route but /healthz — so probe an authenticated route: without a JWT (the
+  // normal local case) it answers 401 and the live E2E is skipped, not failed.
   let up = false;
   try {
-    up = (await fetch(`${API}/agentfirm-api/healthz`)).ok;
+    up = (await fetch(`${API}/agentfirm-api/personas`)).ok;
   } catch {
     up = false;
   }
-  test.skip(!up, 'agentfirm shop-api (:33400) not reachable — skipping live E2E');
+  test.skip(!up, 'agentfirm shop-api (:33400) not reachable without CF-Access JWT — skipping live E2E');
 
   await page.route('**/agentfirm-api/**', async (route) => {
     const req = route.request();
