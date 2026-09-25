@@ -1,0 +1,29 @@
+---
+/** Sub-navigation between the internal admin pages (deliberately not in the public header). */
+interface Props {
+  active: 'personas' | 'skills';
+}
+const { active } = Astro.props;
+const links = [
+  { key: 'personas', href: '/admin/personas/', label: 'Persona-Editor' },
+  { key: 'skills', href: '/admin/skills/', label: 'Skill-Vorschläge' },
+];
+---
+
+<nav class="bg-[#0d0d1a] border-b border-white/10" aria-label="Admin-Navigation">
+  <div class="max-w-6xl mx-auto px-4 flex gap-1">
+    {links.map((l) => (
+      <a
+        href={l.href}
+        aria-current={l.key === active ? 'page' : undefined}
+        class={`px-3 py-2 text-xs font-medium border-b-2 ${
+          l.key === active
+            ? 'border-[#E96C00] text-white'
+            : 'border-transparent text-white/50 hover:text-white/80'
+        }`}
+      >
+        {l.label}
+      </a>
+    ))}
+  </div>
+</nav>

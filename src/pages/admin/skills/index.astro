@@ -1,0 +1,27 @@
+---
+/**
+ * Admin Skill-Vorschläge — H8.14 Variante C
+ *
+ * INTERN — /admin/* und /agentfirm-api/* liegen hinter einer eigenen Cloudflare-Access-App
+ * (nur Klaus). Das Frontend schickt KEIN Token: Cloudflare setzt nach dem Login
+ * `Cf-Access-Jwt-Assertion`, die Shop-API prüft dieses JWT.
+ *
+ * Deep-Link aus Skillis Teams-Ping: /admin/skills/?p=<persona>&s=<skill>
+ */
+import Layout from '../../../layouts/Layout.astro';
+import AdminNav from '../../../components/admin/AdminNav.astro';
+import SkillProposals from '../../../components/admin/SkillProposals';
+---
+
+<Layout
+  title="Admin — Skill-Vorschläge"
+  description="Internes Admin-Tool: Skill-Entwürfe der Personas prüfen und übernehmen (CF-Access-gated)."
+>
+  <div class="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center text-xs text-amber-300">
+    <strong>Intern</strong> — nur für Klaus (Cloudflare Access). „Übernehmen" merged nach agent-firm-V1
+    und rollt die Persona auf Wunsch neu aus.
+  </div>
+  <AdminNav active="skills" />
+
+  <SkillProposals client:only="preact" />
+</Layout>
