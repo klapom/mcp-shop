@@ -65,8 +65,8 @@ export function KnowledgeTab({ draft, onChange }: Props) {
       <p class="text-xs text-white/40">
         Seed-Wissen der Persona. <b>Tier A</b> steht voll in der SOUL.md (immer aktiv),{' '}
         <b>Tier B</b> erscheint dort nur als Index — den Volltext holt die Persona bei Bedarf
-        selbst über <code class="text-white/60">read_knowledge</code>. Änderungen wirken nach Save +
-        Re-Materialisierung des Gateways.
+        selbst über <code class="text-white/60">read_knowledge</code>. Änderungen wirken nach dem
+        Ausrollen (der Text von Tier-B-Dokumenten sofort).
       </p>
 
       {docs.length === 0 && (

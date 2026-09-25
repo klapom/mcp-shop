@@ -7,11 +7,13 @@
  * the personaKey like StreamTab/HistoryTab.
  */
 import { useState } from 'preact/hooks';
-import { generateAvatar, avatarUrl, teamsPackageUrl, type AvatarParams } from '../../lib/shopApi';
+import { generateAvatar, avatarUrl, fetchTeamsPackage, errorText, type AvatarParams } from '../../lib/shopApi';
 
 interface Props {
   personaKey: string;
   displayName: string;
+  /** false = no Teams manifest in the repo (judges) — no package to build */
+  teamsApp: boolean | null;
 }
 
 const GENDER = [
@@ -47,7 +49,7 @@ function Select({ label, value, options, onChange }: {
   );
 }
 
-export function AvatarTab({ personaKey, displayName }: Props) {
+export function AvatarTab({ personaKey, displayName, teamsApp }: Props) {
   const [p, setP] = useState<AvatarParams>({
     gender: 'abstract', age: '40s', look: 'smart_casual',
     style: 'photorealistic', background: 'indigo', extra: '', watermark: false,
@@ -56,6 +58,33 @@ export function AvatarTab({ personaKey, displayName }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [bust, setBust] = useState(Date.now());
   const [seed, setSeed] = useState<number | null>(null);
+  const [pkgBusy, setPkgBusy] = useState(false);
+  const [pkgVersion, setPkgVersion] = useState<string | null>(null);
+  const [pkgError, setPkgError] = useState<string | null>(null);
+
+  // Every download assigns a new package version (only inside the ZIP) → fetch on click,
+  // show the version, then hand the blob to the browser.
+  async function downloadPackage() {
+    setPkgBusy(true);
+    setPkgError(null);
+    try {
+      const { blob, version } = await fetchTeamsPackage(personaKey);
+      setPkgVersion(version ?? '?');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${personaKey}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (e) {
+      const t = errorText(e);
+      setPkgError([t.message, ...t.problems].join(' — '));
+    } finally {
+      setPkgBusy(false);
+    }
+  }
 
   function set(patch: Partial<AvatarParams>) { setP((s) => ({ ...s, ...patch })); }
 
@@ -130,14 +159,31 @@ export function AvatarTab({ personaKey, displayName }: Props) {
         >
           {busy ? 'Generiere … (einige Sekunden)' : 'Avatar generieren'}
         </button>
-        <a
-          href={teamsPackageUrl(personaKey)}
-          class="rounded-lg bg-white/10 px-4 py-1.5 text-sm text-white hover:bg-white/20"
-        >
-          Teams-Paket (ZIP) herunterladen
-        </a>
+        {teamsApp !== false && (
+          <button
+            type="button"
+            onClick={downloadPackage}
+            disabled={pkgBusy}
+            data-testid="teams-package"
+            class="rounded-lg bg-white/10 px-4 py-1.5 text-sm text-white hover:bg-white/20 disabled:opacity-50"
+          >
+            {pkgBusy ? 'Paket wird gebaut …' : 'Teams-Paket (ZIP) herunterladen'}
+          </button>
+        )}
       </div>
 
+      {teamsApp === false && (
+        <p class="text-xs text-white/40" data-testid="no-teams-app">
+          Diese Persona hat keine Teams-App (kein Manifest in deploy/teams-manifests) — kein Paket.
+        </p>
+      )}
+      {pkgVersion && (
+        <div class="rounded bg-emerald-900/30 px-3 py-2 text-xs text-emerald-200" data-testid="package-version">
+          Paketversion <b>{pkgVersion}</b> vergeben. ZIP ins Repo übernehmen
+          (<code>deploy/teams-manifests</code>) und in Teams hochladen.
+        </div>
+      )}
+      {pkgError && <div class="rounded bg-red-900/40 px-3 py-2 text-xs text-red-200">{pkgError}</div>}
       {error && <div class="rounded bg-red-900/40 px-3 py-2 text-xs text-red-200">{error}</div>}
     </div>
   );

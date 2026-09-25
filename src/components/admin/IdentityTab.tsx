@@ -1,20 +1,19 @@
-/** H4.2 — Identity tab: display_name, identity_prose, baseline_ref, model, reasoning. */
-import type { PersonaSpec } from '../../lib/shopApi';
+/** Identity tab: display_name, identity_prose, model (from /catalog.models), thinking on/off. */
+import type { PersonaSpec, ModelOption } from '../../lib/shopApi';
 
 interface Props {
   draft: PersonaSpec;
+  models: ModelOption[] | null;
   onChange: (patch: Partial<PersonaSpec>) => void;
 }
 
-const MODEL_OPTIONS = [
-  'qwen36-35b',
-  'gemma4-e4b-judge',
-  'gpt-4o',
-  'gpt-4o-mini',
-  'claude-3-5-sonnet',
-];
+/** What „Thinking an" writes — the materializer only distinguishes on/off, not the level. */
+export const THINKING_ON = 'medium';
 
-export function IdentityTab({ draft, onChange }: Props) {
+export function IdentityTab({ draft, models, onChange }: Props) {
+  const known = models?.some((m) => m.id === draft.model) ?? true;
+  const thinking = draft.reasoning != null && draft.reasoning !== '' && draft.reasoning !== 'none';
+
   return (
     <div class="space-y-5">
       <Field label="Persona-Key">
@@ -24,19 +23,20 @@ export function IdentityTab({ draft, onChange }: Props) {
           disabled
           class="w-full rounded-md border border-white/10 bg-black/30 px-3 py-1.5 font-mono text-sm text-white/50 cursor-not-allowed"
         />
-        <p class="mt-1 text-[11px] text-white/30">Key ist nach Erstellung unveränderlich.</p>
       </Field>
 
-      <Field label="Display Name">
+      <Field label="Anzeigename">
         <input
           type="text"
           value={draft.display_name}
+          aria-label="Anzeigename"
           onInput={(e) => onChange({ display_name: (e.target as HTMLInputElement).value })}
           class={inputCls}
         />
+        <p class="mt-1 text-[11px] text-white/30">Erscheint auch im Footer jeder Antwort.</p>
       </Field>
 
-      <Field label="Identity Prose">
+      <Field label="Identität (System-Prompt)">
         <textarea
           value={draft.identity_prose}
           onInput={(e) => onChange({ identity_prose: (e.target as HTMLTextAreaElement).value })}
@@ -44,76 +44,52 @@ export function IdentityTab({ draft, onChange }: Props) {
           class={`${inputCls} resize-y`}
         />
         <p class="mt-1 text-[11px] text-white/30">
-          Der Kern-System-Prompt dieser Persona — wird im Baseline-Block eingebettet.
+          Kern der SOUL.md dieser Persona — wirkt nach dem Ausrollen.
         </p>
-      </Field>
-
-      <Field label="Baseline Ref">
-        <input
-          type="text"
-          value={draft.baseline_ref}
-          onInput={(e) => onChange({ baseline_ref: (e.target as HTMLInputElement).value })}
-          placeholder="shared/baselines/default-v1.md"
-          class={inputCls}
-        />
       </Field>
 
       <div class="grid grid-cols-2 gap-4">
         <Field label="Modell">
           <select
             value={draft.model}
+            data-testid="model-select"
             onChange={(e) => onChange({ model: (e.target as HTMLSelectElement).value })}
             class={inputCls}
           >
-            {MODEL_OPTIONS.map((m) => (
-              <option key={m} value={m}>{m}</option>
+            {(models ?? []).map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+                {m.default ? ' — Standard' : ''}
+              </option>
             ))}
-            {/* Fallback: if current model not in list, show it */}
-            {!MODEL_OPTIONS.includes(draft.model) && (
-              <option value={draft.model}>{draft.model}</option>
-            )}
+            {/* current value not (or not yet) in the catalog: show it instead of hiding it */}
+            {!known || !models ? (
+              <option value={draft.model}>
+                {draft.model}
+                {models ? ' (unbekannt — fällt auf den Standard-Endpoint zurück)' : ''}
+              </option>
+            ) : null}
           </select>
         </Field>
 
-        <Field label="Reasoning (optional, z.B. low/medium/high)">
-          <input
-            type="text"
-            value={draft.reasoning ?? ''}
-            onInput={(e) => {
-              const v = (e.target as HTMLInputElement).value.trim();
-              onChange({ reasoning: v === '' ? null : v });
-            }}
-            placeholder="leer = aus"
-            class="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
-          />
-        </Field>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <Field label="Track: Sovereign">
-          <label class="flex items-center gap-2 mt-1.5 cursor-pointer">
+        <Field label="Thinking">
+          <label class="mt-1.5 flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={draft.track_sovereign}
-              onChange={(e) => onChange({ track_sovereign: (e.target as HTMLInputElement).checked })}
-              class="h-4 w-4 rounded accent-[#E96C00]"
-            />
-            <span class="text-sm text-white/80">Sovereign-Track aktiv</span>
-          </label>
-        </Field>
-
-        <Field label="Track: Microsoft">
-          <label class="flex items-center gap-2 mt-1.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={draft.track_microsoft}
+              role="switch"
+              data-testid="thinking-toggle"
+              checked={thinking}
               onChange={(e) =>
-                onChange({ track_microsoft: (e.target as HTMLInputElement).checked })
+                onChange({ reasoning: (e.target as HTMLInputElement).checked ? THINKING_ON : null })
               }
               class="h-4 w-4 rounded accent-[#E96C00]"
             />
-            <span class="text-sm text-white/80">Microsoft-Track aktiv</span>
+            <span class="text-sm text-white/80">{thinking ? 'an' : 'aus'}</span>
           </label>
+          <p class="mt-1 text-[11px] text-white/30">
+            Das Modell denkt vor der Antwort nach (langsamer, gründlicher). Nur an/aus — eine
+            Stufe gibt es nicht.
+          </p>
         </Field>
       </div>
     </div>
