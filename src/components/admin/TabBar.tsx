@@ -1,10 +1,9 @@
 /** Reusable horizontal tab bar for the admin editor. */
-import type { ComponentChildren } from 'preact';
 
+// Tab ids stay stable (deep links like ?tab=avatar); only the labels changed.
 export type Tab =
   | 'identity'
   | 'coupling'
-  | 'behavior'
   | 'approval'
   | 'knowledge'
   | 'avatar'
@@ -13,14 +12,20 @@ export type Tab =
 
 const TAB_LABELS: Record<Tab, string> = {
   identity: 'Identität',
-  coupling: 'Skills & MCPs',
-  behavior: 'Verhalten',
-  approval: 'Approval-Policies',
+  coupling: 'Werkzeug-Gruppen',
+  approval: 'Freigaben',
   knowledge: 'Wissen',
-  avatar: 'Bild',
-  stream: 'Stream',
+  avatar: 'Bild & Teams-App',
+  stream: 'Team',
   history: 'Verlauf',
 };
+
+/** Old deep-link ids → current tab ('behavior' was split up: Wertstrom now lives in „Team"). */
+export function normalizeTab(raw: string | null | undefined): Tab | undefined {
+  if (!raw) return undefined;
+  if (raw === 'behavior') return 'stream';
+  return raw in TAB_LABELS ? (raw as Tab) : undefined;
+}
 
 interface Props {
   active: Tab;
@@ -29,11 +34,14 @@ interface Props {
 
 export function TabBar({ active, onChange }: Props) {
   return (
-    <div class="flex border-b border-white/10 overflow-x-auto text-sm">
+    <div class="flex border-b border-white/10 overflow-x-auto text-sm" role="tablist">
       {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
         <button
           key={t}
           type="button"
+          role="tab"
+          aria-selected={active === t}
+          data-testid={`tab-${t}`}
           onClick={() => onChange(t)}
           class={`shrink-0 px-4 py-2.5 font-medium transition-colors whitespace-nowrap ${
             active === t
