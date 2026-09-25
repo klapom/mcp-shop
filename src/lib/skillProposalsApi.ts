@@ -62,6 +62,14 @@ export interface ProposalItem {
   collected_at: string | null;
   reported_at: string | null;
   edited_at: string | null;
+  /** who did what (H8.14e) — e-mail from the verified Access JWT or `cli:<user>`; absent on old drafts */
+  edited_by?: string | null;
+  rejected_at?: string | null;
+  rejected_by?: string | null;
+  adopted_at?: string | null;
+  adopted_by?: string | null;
+  rollout_at?: string | null;
+  rollout_by?: string | null;
   container_changed: boolean;
   pr: string | null;
   rollout_pending: string | null;
@@ -78,6 +86,8 @@ export interface ProposalItem {
 export interface RejectedEntry {
   reason: string;
   at: string;
+  /** who rejected (H8.14e); missing on entries written before */
+  by?: string | null;
   sha256?: string;
   repeats: number;
   reported: number;
@@ -288,4 +298,70 @@ export const SKILL_RE = /^[a-z0-9][a-z0-9-]*$/;
 /** Only http(s) links to GitHub are rendered as <a href> (no javascript:/data: URLs). */
 export function safePrUrl(pr: string | null | undefined): string | null {
   return pr && /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+$/.test(pr) ? pr : null;
+}
+
+// ---------------------------------------------------------------------------
+// Timestamps + actors (H8.14e)
+// ---------------------------------------------------------------------------
+
+/** All times are shown in this zone, German format ("25.09.2026, 07:21"). */
+export const DISPLAY_TZ = 'Europe/Berlin';
+
+/**
+ * Legacy timestamps WITHOUT zone (written before H8.14e) are read per field, because the
+ * writer determines the zone (measured 2026-09-25):
+ *  - `reported_at`, `reviewed_at`: written inside Skilli's container, whose system TZ is UTC
+ *    → read as UTC.
+ *  - everything else (`collected_at`, `rejected_at`, `_rejected.json` `at`, `edited_at`, job
+ *    times, …): written on the Spark host (Europe/Berlin) → read as Berlin wall-clock time.
+ * New values carry a zone (`…+00:00`) and are converted exactly. Legacy files are NOT
+ * migrated; the tooltip of a legacy value says how it was read.
+ */
+export const NAIVE_UTC_FIELDS: ReadonlySet<string> = new Set(['reported_at', 'reviewed_at']);
+
+const HAS_ZONE = /(Z|[+-]\d{2}:?\d{2})$/i;
+const NAIVE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/;
+
+const FMT = new Intl.DateTimeFormat('de-DE', {
+  timeZone: DISPLAY_TZ,
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+export interface Stamp {
+  text: string;
+  /** set for legacy values without zone: how they were interpreted */
+  title?: string;
+}
+
+/** Format an ISO timestamp for display in Europe/Berlin. `field` decides legacy handling. */
+export function formatStamp(value: string | null | undefined, field = ''): Stamp | null {
+  if (!value) return null;
+  const v = value.trim();
+  if (HAS_ZONE.test(v)) {
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? { text: v } : { text: FMT.format(d) };
+  }
+  const m = NAIVE.exec(v);
+  if (!m) return { text: v };
+  if (NAIVE_UTC_FIELDS.has(field)) {
+    const d = new Date(`${v}Z`);
+    return Number.isNaN(d.getTime())
+      ? { text: v }
+      : { text: FMT.format(d), title: 'Altwert ohne Zeitzone — als UTC gelesen (im Container geschrieben)' };
+  }
+  const [, y, mo, da, h, mi] = m;
+  return {
+    text: `${da}.${mo}.${y}, ${h}:${mi}`,
+    title: 'Altwert ohne Zeitzone — als Ortszeit Europe/Berlin gelesen (auf dem Host geschrieben)',
+  };
+}
+
+/** `cli:admin` → `admin (CLI)`; e-mails unchanged. */
+export function formatActor(by: string | null | undefined): string | null {
+  if (!by) return null;
+  return by.startsWith('cli:') ? `${by.slice(4) || 'unbekannt'} (CLI)` : by;
 }

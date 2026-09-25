@@ -12,6 +12,8 @@ import {
   listProposals,
   detailHref,
   safePrUrl,
+  formatStamp,
+  formatActor,
   STATE_LABELS,
   type ProposalItem,
   type ProposalList,
@@ -86,6 +88,42 @@ export function ScanLights({ scan }: { scan: ScanSummary | null }) {
   );
 }
 
+/** A timestamp in Europe/Berlin; legacy values without zone carry a tooltip saying how they were read. */
+export function When({ value, field }: { value: string | null | undefined; field?: string }) {
+  const st = formatStamp(value, field);
+  if (!st) return <>—</>;
+  return (
+    <time dateTime={value ?? undefined} title={st.title} data-testid={field ? `when-${field}` : undefined}>
+      {st.text}
+    </time>
+  );
+}
+
+/** "Abgelehnt am 25.09.2026, 07:21 von klaus.pommer@… — Grund: …" (without `by`: date only). */
+export function RejectedLine({
+  at,
+  by,
+  reason,
+}: {
+  at: string | null | undefined;
+  by: string | null | undefined;
+  reason: string | null | undefined;
+}) {
+  const who = formatActor(by);
+  return (
+    <div class="text-white/50" data-testid="hint-rejected">
+      Abgelehnt
+      {at && (
+        <>
+          {' '}am <When value={at} field="rejected_at" />
+        </>
+      )}
+      {who && <> von {who}</>}
+      {reason && <> — Grund: {reason}</>}
+    </div>
+  );
+}
+
 /** Collector/job hints shown in list and detail. */
 export function ItemHints({ item }: { item: ProposalItem }) {
   const pr = safePrUrl(item.pr);
@@ -108,9 +146,7 @@ export function ItemHints({ item }: { item: ProposalItem }) {
       {item.rollout_pending && (
         <div class="rounded bg-amber-900/30 px-2 py-1 text-amber-200">{item.rollout_pending}</div>
       )}
-      {item.state === 'rejected' && item.reason && (
-        <div class="text-white/50">Abgelehnt: {item.reason}</div>
-      )}
+      {item.state === 'rejected' && <RejectedLine at={item.rejected_at} by={item.rejected_by} reason={item.reason} />}
       {item.repeats != null && item.repeats > 0 && (
         <div class="text-amber-300/80" data-testid="hint-repeats">
           Name war abgelehnt — die Persona hat ihn {item.repeats}× erneut vorgeschlagen.
@@ -249,6 +285,7 @@ export default function SkillProposalsList() {
                   <th class="px-3 py-2">Persona/Skill</th>
                   <th class="px-3 py-2">Grund</th>
                   <th class="px-3 py-2">abgelehnt am</th>
+                  <th class="px-3 py-2">von</th>
                   <th class="px-3 py-2">erneut vorgeschlagen</th>
                 </tr>
               </thead>
@@ -257,7 +294,10 @@ export default function SkillProposalsList() {
                   <tr key={key} class="border-t border-white/5">
                     <td class="px-3 py-2 font-mono">{key}</td>
                     <td class="px-3 py-2 text-white/70">{r.reason}</td>
-                    <td class="px-3 py-2 text-white/50">{r.at}</td>
+                    <td class="px-3 py-2 text-white/50">
+                      <When value={r.at} field="at" />
+                    </td>
+                    <td class="px-3 py-2 text-white/50">{formatActor(r.by) ?? '—'}</td>
                     <td class={`px-3 py-2 ${r.repeats > 0 ? 'text-amber-300' : 'text-white/50'}`}>{r.repeats}×</td>
                   </tr>
                 ))}
