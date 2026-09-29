@@ -13,7 +13,7 @@
  * text only, never via innerHTML.
  */
 
-const API_BASE: string =
+export const API_BASE: string =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.PUBLIC_SHOP_API_BASE) ||
   '/agentfirm-api';
 

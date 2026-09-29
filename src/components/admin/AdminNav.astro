@@ -1,12 +1,13 @@
 ---
 /** Sub-navigation between the internal admin pages (deliberately not in the public header). */
 interface Props {
-  active: 'personas' | 'skills';
+  active: 'personas' | 'skills' | 'persona-proposals';
 }
 const { active } = Astro.props;
 const links = [
   { key: 'personas', href: '/admin/personas/', label: 'Persona-Editor' },
   { key: 'skills', href: '/admin/skills/', label: 'Skill-Vorschläge' },
+  { key: 'persona-proposals', href: '/admin/persona-proposals/', label: 'Persona-Entwürfe' },
 ];
 ---
 
