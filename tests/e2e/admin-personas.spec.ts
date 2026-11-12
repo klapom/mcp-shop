@@ -116,6 +116,8 @@ interface MockOpts {
   put?: (key: string, body: any) => { status: number; body: unknown } | null;
   /** answer for POST …/rollout (default 202) */
   rollout?: (key: string) => { status: number; body: unknown } | null;
+  /** answer for GET …/approvals/history (H16; default: falls through to the 405 mock) */
+  history?: (key: string) => { status: number; body: unknown } | null;
 }
 
 async function mockApi(page: Page, opts: MockOpts = {}) {
@@ -236,6 +238,10 @@ async function mockApi(page: Page, opts: MockOpts = {}) {
           log_tail: '',
         };
         return json(202, { state: 'rolling_out', job: r.rollout.job });
+      }
+      if (action === 'approvals' && parts[3] === 'history' && method === 'GET') {
+        const custom = opts.history?.(key);
+        if (custom) return json(custom.status, custom.body);
       }
       if (action === 'co-personas') return json(200, { co_personas: ['helga'] });
       if (action === 'versions') {
@@ -635,4 +641,116 @@ test('Banner: CF-Access-Login, kein Bearer-Token', async ({ page }) => {
   await page.goto(APP);
   await expect(page.getByText('Login über Cloudflare Access')).toBeVisible();
   await expect(page.getByText(/Bearer/)).toHaveCount(0);
+});
+
+// ---------------------------------------------------------------------------
+// H16 — Freigabe-Verlauf je Regel (Critic-Grün-Marker 18–23)
+// ---------------------------------------------------------------------------
+
+function hist(entries: Record<string, unknown>[], over: Record<string, unknown> = {}) {
+  return {
+    status: 200,
+    body: {
+      persona: 'ot-expert',
+      available: true,
+      entries,
+      total: entries.length,
+      auto_count: 3,
+      skipped: 0,
+      truncated: false,
+      ...over,
+    },
+  };
+}
+
+function entry(rule: string, action: string, over: Record<string, unknown> = {}) {
+  return {
+    ts: '2026-09-29T09:44:45+00:00',
+    rule,
+    tool_raw: `mcp_pommer_gw_${rule}`,
+    action,
+    klass: 'entscheidung',
+    headless: false,
+    session_id: 's1',
+    ...over,
+  };
+}
+
+const historyCalls = (calls: Recorded[]) =>
+  calls.filter((c) => c.method === 'GET' && c.path.endsWith('/approvals/history'));
+
+test('H16-18 Verlauf je Regel: Einträge mit Zeit, Label, Cron-Badge; Regel ohne Einträge zeigt Leerzustand', async ({ page }) => {
+  await mockApi(page, {
+    history: () =>
+      hist([
+        entry('m365_send_email', 'denied'),
+        entry('m365_send_email', 'require_approval', { headless: true, klass: 'blockiert', ts: '2026-09-28T07:30:00+00:00' }),
+      ]),
+  });
+  await page.goto(`${APP}?persona=ot-expert&tab=approval`);
+  const row = page.getByTestId('policy-m365_send_email');
+  const h = row.getByTestId('history-m365_send_email');
+  await expect(h).toContainText('Verlauf (2)');
+  await h.locator('summary').click();
+  await expect(h).toContainText('abgelehnt');
+  await expect(h).toContainText('29.09.26, 11:44'); // UTC → Europe/Berlin
+  await expect(h.getByText('Cron')).toHaveCount(1);
+  await expect(page.getByTestId('policy-delete_event').getByTestId('history-delete_event-empty')).toHaveText(
+    'noch keine Entscheidungen',
+  );
+  await expect(page.getByTestId('history-auto-count')).toContainText('3 automatisch erlaubte');
+  await page.screenshot({ path: 'test-results/admin-personas-approval-history.png', fullPage: true });
+});
+
+test('H16-19 Standardregeln: Verlauf nur für Standard-Tools mit Einträgen', async ({ page }) => {
+  await mockApi(page, {
+    history: () => hist([entry('delete_email', 'approved_once'), entry('delete_event', 'denied')]),
+  });
+  await page.goto(`${APP}?persona=ot-expert&tab=approval`);
+  const block = page.getByTestId('default-history-delete_email');
+  await expect(block).toBeVisible();
+  await expect(block.getByTestId('history-delete_email')).toContainText('Verlauf (1)');
+  await expect(page.getByTestId('default-history-delete_task')).toHaveCount(0);
+  // delete_event has an own rule → its history sits in the row, not in the defaults box
+  await expect(page.getByTestId('default-history-delete_event')).toHaveCount(0);
+  await expect(page.getByTestId('policy-delete_event').getByTestId('history-delete_event')).toContainText('Verlauf (1)');
+});
+
+test('H16-20 Verlauf-Fehler (503) blockiert das Speichern nicht; PUT ohne Verlaufsfelder', async ({ page }) => {
+  const { calls } = await mockApi(page, { history: () => ({ status: 503, body: { detail: 'docker nicht erreichbar' } }) });
+  await page.goto(`${APP}?persona=ot-expert&tab=approval`);
+  await expect(page.getByTestId('history-error')).toContainText('Verlauf nicht verfügbar');
+  await page.getByTestId('policy-delete_event').getByRole('radio', { name: 'Ablehnen' }).click();
+  await page.getByTestId('save-button').click();
+  await expect.poll(() => puts(calls).length).toBe(1);
+  const body = puts(calls)[0].body;
+  expect(body.approval_policies).toEqual({
+    m365_send_email: { always: 'log_only' },
+    delete_event: { always: 'deny' },
+  });
+  for (const k of ['entries', 'history', 'auto_count']) expect(body).not.toHaveProperty(k);
+});
+
+test('H16-21 Container läuft nicht (409) → lesbarer Hinweis', async ({ page }) => {
+  await mockApi(page, { history: () => ({ status: 409, body: { detail: "Persona 'ot-expert': Container läuft nicht" } }) });
+  await page.goto(`${APP}?persona=ot-expert&tab=approval`);
+  await expect(page.getByTestId('history-error')).toContainText('Container läuft nicht');
+});
+
+test('H16-22 genau ein Verlauf-Request je Tab-Öffnung', async ({ page }) => {
+  const { calls } = await mockApi(page, { history: () => hist([entry('m365_send_email', 'denied')]) });
+  await page.goto(`${APP}?persona=ot-expert&tab=approval`);
+  await expect(page.getByTestId('history-m365_send_email')).toBeVisible();
+  await page.getByTestId('policy-delete_event').getByRole('radio', { name: 'Ablehnen' }).click();
+  expect(historyCalls(calls)).toHaveLength(1);
+});
+
+test('H16-23 HTML in action wird als Text gerendert', async ({ page }) => {
+  const evil = '<img src=x onerror=alert(1)>';
+  await mockApi(page, { history: () => hist([entry('m365_send_email', evil, { klass: 'sonstige' })]) });
+  await page.goto(`${APP}?persona=ot-expert&tab=approval`);
+  const h = page.getByTestId('history-m365_send_email');
+  await h.locator('summary').click();
+  await expect(h.getByTestId('history-action')).toHaveText(evil);
+  await expect(h.locator('img')).toHaveCount(0);
 });

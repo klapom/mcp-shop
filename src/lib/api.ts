@@ -1,5 +1,4 @@
 import type { AuditReport, AvatarParams } from './wizard-state';
-import { GATEWAY_BASE, authHeader } from './gateway-auth';
 
 const API_BASE =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.PUBLIC_POMMER_API_URL) ||
@@ -236,66 +235,7 @@ export function avatarUrl(tenantId: string, personaKey: string, bust?: number): 
   return `${API_BASE}/tenants/${tenantId}/personas/${personaKey}/avatar.webp?t=${ts}`;
 }
 
-// --- Persona-Approval-Management (P86) -----------------------------------
-//
-// Calls the gateway approvals BFF (GATEWAY_BASE/approvals/...). Auth is the
-// gateway JWT from the in-browser OAuth-PKCE login (gateway-auth.ts); the JWT
-// carries tenant_id, from which the gateway derives X-Pommer-Tenant-Id and
-// proxies to hermes-rest /admin with the server-side admin token. SSoT for
-// policy is the hermes bundle — we just read/write.
-
-export type ApprovalMode = 'allow' | 'ask' | 'deny' | 'recipient';
-
-export interface ApprovalTool {
-  tool: string;
-  mode: ApprovalMode;
-  always: string | null;
-  match_arg: string | null;
-  trusted_patterns: string[];
-  on_mismatch: string | null;
-  /** 'bundle' = explicitly set policy · 'default' = fail-closed 19-tool default. */
-  source: 'bundle' | 'default';
-}
-
-export interface ApprovalMatrix {
-  persona: string;
-  tools: ApprovalTool[];
-}
-
-export interface ApprovalUpdate {
-  mode: ApprovalMode;
-  /** recipient-mode only — forwarded verbatim to hermes. */
-  trusted_patterns?: string[];
-  match_arg?: string;
-  on_mismatch?: 'deny' | 'require_approval';
-}
-
-export interface ApprovalHistoryEntry {
-  /** 'gate_decision' (a tool firing) or 'policy_change' (a PUT). Other keys passthrough. */
-  kind?: string;
-  tool?: string;
-  decision?: string;
-  at?: string;
-  by?: string;
-  [k: string]: unknown;
-}
-
-export interface LiveGrant {
-  scope: string;
-  tool: string;
-  conversation_id: string | null;
-  ttl_seconds: number | null;
-}
-
-export interface ApprovalHistory {
-  persona: string;
-  total: number;
-  limit: number;
-  offset: number;
-  entries: ApprovalHistoryEntry[];
-  audit_enabled: boolean;
-  live_grants: LiveGrant[];
-}
+// --- Gateway auth error (PKCE login, used by the portal upload) -----------
 
 /** Thrown on a 401 from the gateway → the UI re-initiates the PKCE login. */
 export class GatewayAuthError extends Error {
@@ -303,69 +243,4 @@ export class GatewayAuthError extends Error {
     super(message);
     this.name = 'GatewayAuthError';
   }
-}
-
-export async function getApprovals(personaKey: string): Promise<ApprovalMatrix> {
-  const res = await fetch(`${GATEWAY_BASE}/approvals/personas/${personaKey}`, {
-    headers: authHeader(),
-  });
-  if (res.status === 401) throw new GatewayAuthError();
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Freigaben laden fehlgeschlagen (${res.status}): ${detail}`);
-  }
-  return res.json() as Promise<ApprovalMatrix>;
-}
-
-/**
- * hermes PUT response — note it is NOT shaped like an ApprovalTool (no `mode`
- * field; the applied policy is under `applied`). The UI must therefore keep its
- * optimistic tool state after a successful write rather than rendering this.
- */
-export interface ApprovalWriteResult {
-  status: string;
-  persona: string;
-  tool: string;
-  applied: Record<string, unknown>;
-  previous: unknown;
-  by: string;
-  reloaded?: boolean;
-}
-
-export async function setApproval(
-  personaKey: string,
-  tool: string,
-  body: ApprovalUpdate,
-): Promise<ApprovalWriteResult> {
-  const res = await fetch(`${GATEWAY_BASE}/approvals/personas/${personaKey}/tools/${tool}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...authHeader() },
-    body: JSON.stringify(body),
-  });
-  if (res.status === 401) throw new GatewayAuthError();
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Freigabe speichern fehlgeschlagen (${res.status}): ${detail}`);
-  }
-  return res.json() as Promise<ApprovalWriteResult>;
-}
-
-export async function getApprovalHistory(
-  personaKey: string,
-  opts: { limit?: number; offset?: number } = {},
-): Promise<ApprovalHistory> {
-  const params = new URLSearchParams({
-    limit: String(opts.limit ?? 100),
-    offset: String(opts.offset ?? 0),
-  });
-  const res = await fetch(
-    `${GATEWAY_BASE}/approvals/personas/${personaKey}/history?${params}`,
-    { headers: authHeader() },
-  );
-  if (res.status === 401) throw new GatewayAuthError();
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Verlauf laden fehlgeschlagen (${res.status}): ${detail}`);
-  }
-  return res.json() as Promise<ApprovalHistory>;
 }

@@ -6,8 +6,8 @@ import { PERSONAS } from '../../lib/personas.generated';
 
 /**
  * Persona overview — a directory of every persona in the registry, linking to
- * each detail page (/personas/<key>) where the Daily-Doing card and the
- * Freigaben/Verlauf approval surface live.
+ * each detail page (/personas/<key>) with the Daily-Doing card. Approval rules and their
+ * history live in the admin persona editor (tab „Freigaben“, H16).
  *
  * Customer-facing personas are listed first; internal ones follow with an
  * "Intern" badge (mirrors the note on the detail page). The shop sits behind
@@ -22,7 +22,7 @@ const customerCount = sorted.filter((p) => p.customerFacing).length;
 
 <Layout
   title="Personas — Pommer Agents"
-  description="Alle Pommer-Agent-Personas im Überblick — mit Daily Doing und Freigaben-Verwaltung pro Persona."
+  description="Alle Pommer-Agent-Personas im Überblick — mit Daily Doing pro Persona."
 >
   <Header />
 
@@ -38,8 +38,7 @@ const customerCount = sorted.filter((p) => p.customerFacing).length;
         <h1 class="text-3xl font-bold">Personas</h1>
         <p class="text-white/70 mt-2 max-w-2xl">
           {PERSONAS.length} Personas im Registry ({customerCount} customer-facing).
-          Jede Persona hat eine Detailseite mit „Daily Doing" und der Freigaben-
-          &amp; Verlauf-Verwaltung.
+          Jede Persona hat eine Detailseite mit „Daily Doing".
         </p>
       </header>
 

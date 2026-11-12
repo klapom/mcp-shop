@@ -4,12 +4,24 @@
  * Five modes: Erlauben (allow) · Protokollieren (log_only) · Nachfragen (require_approval) ·
  * Ablehnen (deny) · Trusted-Empfänger (match_arg + trusted_patterns + on_mismatch).
  * Semantics (agent-firm-V1 config/gated_tools.py + approval_gate engine): without a policy
- * a tool is ALLOWED; only the 19 gated tools have a default (chat: ask, cron: deny). A
+ * a tool is ALLOWED; only the gated tools have a default (chat: ask, cron: deny). A
  * persona policy overrides that default on every path, including cron.
  * The gate re-reads policies from Neo4j — they take effect ≤5 min after saving, no rollout.
+ *
+ * H16: each rule shows its decision history (gate audit of the gateway, one request per tab
+ * open, grouped client-side by `rule`). Standard rules without an own row show their history
+ * in the defaults box — only when they have entries. A failing history never blocks editing.
  */
-import { useState } from 'preact/hooks';
-import type { PersonaSpec, ApprovalPolicy, PolicyMismatch } from '../../lib/shopApi';
+import { useEffect, useState } from 'preact/hooks';
+import {
+  getApprovalHistory,
+  ShopApiError,
+  type ApprovalHistory,
+  type ApprovalHistoryEntry,
+  type PersonaSpec,
+  type ApprovalPolicy,
+  type PolicyMismatch,
+} from '../../lib/shopApi';
 
 type PolicyMode = 'allow' | 'log_only' | 'ask' | 'deny' | 'recipient';
 
@@ -76,7 +88,107 @@ export function policyProblems(policies: Record<string, ApprovalPolicy> | undefi
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// History (H16)
+// ---------------------------------------------------------------------------
+
+const ACTION_LABEL: Record<string, string> = {
+  approval_requested: 'Karte gezeigt',
+  approved_once: 'einmal freigegeben',
+  approved_session: 'für die Sitzung freigegeben',
+  always_as_session: '„immer“ → für die Sitzung freigegeben',
+  session_grant: 'Sitzungs-Freigabe genutzt',
+  denied: 'abgelehnt',
+  denied_repeat: 'erneut abgelehnt (keine Karte)',
+  timeout: 'keine Antwort (Zeit abgelaufen)',
+  require_approval: 'Freigabe nötig',
+  deny: 'blockiert (Regel)',
+  no_channel: 'blockiert (kein Kanal für die Karte)',
+  preview_no_confirm: 'Vorschau, ohne Rückfrage',
+  allow: 'automatisch erlaubt',
+  log_only: 'ausgeführt + protokolliert',
+};
+
+const KLASS_STYLE: Record<string, string> = {
+  entscheidung: 'text-white/80',
+  frage: 'text-indigo-200/80',
+  blockiert: 'text-red-300/90',
+  auto: 'text-white/40',
+  sonstige: 'text-white/50',
+};
+
+function actionLabel(action: string): string {
+  if (ACTION_LABEL[action]) return ACTION_LABEL[action];
+  if (action.startsWith('blocked_')) return `blockiert (${action.slice(8)})`;
+  return action;
+}
+
+function fmtTs(ts: string): string {
+  const d = new Date(ts);
+  return Number.isNaN(d.getTime())
+    ? ts
+    : d.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Berlin' });
+}
+
+type HistoryState =
+  | { status: 'loading' }
+  | { status: 'ok'; data: ApprovalHistory; byRule: Record<string, ApprovalHistoryEntry[]> }
+  | { status: 'error'; message: string };
+
+function useApprovalHistory(personaKey: string): HistoryState {
+  const [state, setState] = useState<HistoryState>({ status: 'loading' });
+  useEffect(() => {
+    let alive = true;
+    getApprovalHistory(personaKey)
+      .then((data) => {
+        const byRule: Record<string, ApprovalHistoryEntry[]> = {};
+        for (const e of data.entries) {
+          if (e.rule) (byRule[e.rule] ??= []).push(e);
+        }
+        if (alive) setState({ status: 'ok', data, byRule });
+      })
+      .catch((e) => {
+        let message = e instanceof Error ? e.message : String(e);
+        if (e instanceof ShopApiError && e.status === 409) message = 'Container läuft nicht — kein Verlauf.';
+        if (e instanceof ShopApiError && e.status === 404) message = 'Kein Container (eingefroren) — kein Verlauf.';
+        if (alive) setState({ status: 'error', message: `Verlauf nicht verfügbar: ${message}` });
+      });
+    return () => {
+      alive = false;
+    };
+  }, [personaKey]);
+  return state;
+}
+
+function HistoryList({ entries, testId }: { entries: ApprovalHistoryEntry[]; testId: string }) {
+  if (entries.length === 0) {
+    return (
+      <p class="mt-1 text-[11px] italic text-white/30" data-testid={`${testId}-empty`}>
+        noch keine Entscheidungen
+      </p>
+    );
+  }
+  return (
+    <details class="mt-1" data-testid={testId}>
+      <summary class="cursor-pointer text-[11px] text-white/50 hover:text-white/70">
+        Verlauf ({entries.length})
+      </summary>
+      <ul class="mt-1 space-y-0.5 pl-2">
+        {entries.map((e, i) => (
+          <li key={i} class={`flex flex-wrap gap-2 text-[11px] ${KLASS_STYLE[e.klass] ?? 'text-white/50'}`}>
+            <span class="font-mono text-white/40">{fmtTs(e.ts)}</span>
+            <span data-testid="history-action">{actionLabel(e.action)}</span>
+            {e.headless && <span class="rounded bg-white/10 px-1 text-[10px] text-white/60">Cron</span>}
+            {e.tool_raw !== e.rule && <span class="font-mono text-white/30">{e.tool_raw}</span>}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 interface Props {
+  personaKey: string;
   draft: PersonaSpec;
   gatedTools: string[] | null;
   /** all tool names from the catalog groups — autocomplete for new rows */
@@ -84,8 +196,10 @@ interface Props {
   onChange: (patch: Partial<PersonaSpec>) => void;
 }
 
-export function ApprovalTab({ draft, gatedTools, knownTools, onChange }: Props) {
+export function ApprovalTab({ personaKey, draft, gatedTools, knownTools, onChange }: Props) {
   const [newTool, setNewTool] = useState('');
+  const history = useApprovalHistory(personaKey);
+  const byRule = history.status === 'ok' ? history.byRule : {};
   const policies = draft.approval_policies ?? {};
 
   function setPolicy(tool: string, policy: ApprovalPolicy) {
@@ -136,7 +250,28 @@ export function ApprovalTab({ draft, gatedTools, knownTools, onChange }: Props) 
           Werkzeug-Namen passen exakt oder als Endung: <code>send_email</code> gilt auch für{' '}
           <code>m365_send_email</code>. Freigaben wirken nach ≤5 min, ohne Ausrollen.
         </p>
+        {gatedTools &&
+          gatedTools
+            .filter((t) => !(t in policies) && (byRule[t]?.length ?? 0) > 0)
+            .map((t) => (
+              <div key={t} class="mt-2" data-testid={`default-history-${t}`}>
+                <span class="font-mono text-[11px] text-white/70">{t}</span>
+                <HistoryList entries={byRule[t]} testId={`history-${t}`} />
+              </div>
+            ))}
       </div>
+
+      {history.status === 'error' && (
+        <p class="text-xs text-amber-300/80" data-testid="history-error">
+          {history.message}
+        </p>
+      )}
+      {history.status === 'ok' && history.data.auto_count > 0 && (
+        <p class="text-[11px] text-white/30" data-testid="history-auto-count">
+          Dazu {history.data.auto_count} automatisch erlaubte Aufrufe (nicht einzeln gelistet).
+          {history.data.truncated && ' Nur die jüngsten Einträge gelesen.'}
+        </p>
+      )}
 
       {tools.length === 0 && (
         <p class="text-sm text-white/30 italic">Keine eigenen Regeln — es gilt der Standard.</p>
@@ -148,6 +283,7 @@ export function ApprovalTab({ draft, gatedTools, knownTools, onChange }: Props) 
             key={tool}
             tool={tool}
             policy={policies[tool]}
+            history={history.status === 'ok' ? (byRule[tool] ?? []) : null}
             onSet={(p) => setPolicy(tool, p)}
             onRemove={() => removeTool(tool)}
           />
@@ -188,11 +324,14 @@ export function ApprovalTab({ draft, gatedTools, knownTools, onChange }: Props) 
 function PolicyRow({
   tool,
   policy,
+  history,
   onSet,
   onRemove,
 }: {
   tool: string;
   policy: ApprovalPolicy;
+  /** null = history not loaded (loading/error) */
+  history: ApprovalHistoryEntry[] | null;
   onSet: (p: ApprovalPolicy) => void;
   onRemove: () => void;
 }) {
@@ -301,6 +440,7 @@ function PolicyRow({
           </div>
         </div>
       )}
+      {history && <HistoryList entries={history} testId={`history-${tool}`} />}
     </li>
   );
 }

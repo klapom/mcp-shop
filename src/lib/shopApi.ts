@@ -270,9 +270,48 @@ export async function getVersions(key: string): Promise<VersionsResponse> {
   return apiFetch(`/personas/${enc(key)}/versions`);
 }
 
-/** Tool groups, models and the 19 gated tools. */
+/** Tool groups, models and the gated tools (standard rules). */
 export async function getCatalog(): Promise<CatalogResponse> {
   return apiFetch('/catalog');
+}
+
+// ---------------------------------------------------------------------------
+// Freigabe-Verlauf (H16) — gate decisions per rule, from the gateway's gate audit
+// ---------------------------------------------------------------------------
+
+/** auto = ran without asking · frage = card shown · entscheidung = click/timeout ·
+ *  blockiert = blocked (rule, cron, card error) · sonstige = anything else. */
+export type ApprovalKlass = 'auto' | 'frage' | 'entscheidung' | 'blockiert' | 'sonstige';
+
+export interface ApprovalHistoryEntry {
+  /** UTC, ISO 8601 with offset */
+  ts: string;
+  /** rule key this call fell under (engine rule: exact, else longest suffix); null = no rule */
+  rule: string | null;
+  tool_raw: string;
+  action: string;
+  klass: ApprovalKlass;
+  /** true = cron/headless run */
+  headless: boolean;
+  session_id: string | null;
+}
+
+export interface ApprovalHistory {
+  persona: string;
+  /** false = the audit file does not exist yet */
+  available: boolean;
+  entries: ApprovalHistoryEntry[];
+  total: number;
+  /** automatic allow/log_only entries hidden from `entries` */
+  auto_count: number;
+  skipped: number;
+  /** only the newest 2 MiB of the audit were read */
+  truncated: boolean;
+}
+
+/** Gate decisions of one persona, newest first (404 frozen, 409 container not running). */
+export async function getApprovalHistory(key: string, limit = 200): Promise<ApprovalHistory> {
+  return apiFetch(`/personas/${enc(key)}/approvals/history?limit=${limit}`);
 }
 
 // ---------------------------------------------------------------------------
