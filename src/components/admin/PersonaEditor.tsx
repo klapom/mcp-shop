@@ -512,6 +512,7 @@ function EditPanel({ personaKey, initialTab, listItem, catalog, onRuntimeChanged
         {tab === 'coupling' && <CouplingTab draft={draft} groups={catalog?.groups ?? null} onChange={patch} />}
         {tab === 'approval' && (
           <ApprovalTab
+            personaKey={personaKey}
             draft={draft}
             gatedTools={catalog?.gated_tools ?? null}
             knownTools={knownTools}
