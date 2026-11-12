@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # ubuntu-latest = 26.04: Playwright 1.59 kann dort kein Chromium installieren
     steps:
       - uses: actions/checkout@v4
 
