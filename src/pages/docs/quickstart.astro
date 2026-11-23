@@ -62,7 +62,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
             <pre class="bg-[#1A1A2E] text-white text-xs p-4 rounded-lg overflow-x-auto"><code>{`{
   "mcpServers": {
     "pommer-agents": {
-      "url": "${gatewayUrl}/mcp",
+      "url": "${gatewayUrl}/mcp/",
       "transport": "streamable-http"
     }
   }
@@ -75,14 +75,23 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
 
           <!-- Claude Cowork -->
           <div>
-            <h3 class="font-semibold text-[#1A1A2E] mb-2">Claude Cowork (Web)</h3>
+            <h3 class="font-semibold text-[#1A1A2E] mb-2">Claude im Browser (claude.ai, Claude Cowork)</h3>
             <p class="text-sm text-[#6B6B8A] mb-2">
-              Settings → Connectors → Custom Connector → Add. URL:
+              Einstellungen → Konnektoren → „Benutzerdefinierten Konnektor hinzufügen".
+              Name frei wählbar, URL (mit Schrägstrich am Ende):
             </p>
-            <pre class="bg-[#1A1A2E] text-white text-xs p-4 rounded-lg overflow-x-auto"><code>{`${gatewayUrl}/mcp`}</code></pre>
+            <pre class="bg-[#1A1A2E] text-white text-xs p-4 rounded-lg overflow-x-auto"><code>{`${gatewayUrl}/mcp/`}</code></pre>
+            <p class="text-sm text-[#6B6B8A] mt-3 mb-2">In Schritt 2 des Dialogs:</p>
+            <ul class="text-sm text-[#6B6B8A] space-y-1 list-disc list-inside">
+              <li><strong>Authentifizierung:</strong> „Jetzt anmelden"</li>
+              <li><strong>OAuth-Client:</strong> „Automatisch registrieren" (DCR) — keine Client-ID, kein Secret</li>
+              <li><strong>Request-Header:</strong> leer lassen</li>
+            </ul>
             <p class="text-xs text-[#6B6B8A] mt-2">
-              Cowork führt dich direkt durch den OAuth-Flow. DCR (Dynamic Client Registration)
-              passiert automatisch — keine Client-ID/Secret nötig.
+              Claude markiert „Jetzt anmelden" und „Automatisch registrieren" als „Erkannt".
+              „Claudes veröffentlichte Identität verwenden" (CIMD) unterstützt der Gateway nicht —
+              diese Option nicht wählen. Danach öffnet sich der Login; auf der Freigabeseite
+              den Zugriff erlauben. Anschließend erscheinen die Tools deiner aktiven Produkte.
             </p>
           </div>
 
@@ -184,6 +193,39 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
           </details>
           <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
+              Konnektor-Prüfung in claude.ai meldet „Nicht gefunden" bzw. „307"
+            </summary>
+            <p class="mt-3 text-[#6B6B8A] leading-relaxed">
+              Die URL wurde ohne Schrägstrich am Ende eingetragen
+              (<code class="font-mono text-xs">…/mcp</code>). Konnektor entfernen und mit
+              <code class="font-mono text-xs">{`${gatewayUrl}/mcp/`}</code> neu anlegen.
+            </p>
+          </details>
+          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
+              OMNITRACKER vor Ort (OT-GURU-Connect): „no 'read'-privilege" oder fehlende Daten
+            </summary>
+            <div class="mt-3 text-[#6B6B8A] leading-relaxed space-y-2">
+              <p>
+                Der Connect-Dienst arbeitet mit dem OMNITRACKER-Konto, das bei der Einrichtung
+                hinterlegt wurde. Vorgesehen ist ein Konto mit Superuser-Recht. Ist das Konto
+                kein Superuser, gelten seine normalen OMNITRACKER-Rechte:
+              </p>
+              <ul class="list-disc list-inside space-y-1">
+                <li>Suchen und Lesen in Ordnern ohne Leserecht scheitern mit „no 'read'-privilege".</li>
+                <li>Die Ordnerliste kann trotzdem Ordner zeigen, die das Konto nicht lesen darf.</li>
+              </ul>
+              <p>
+                Abhilfe: dem Konto Superuser-Recht geben oder Leserecht auf die benötigten Ordner.
+              </p>
+              <p>
+                Ordner oder Felder, die nach dem Start des Connect-Dienstes in OMNITRACKER angelegt
+                werden, sieht der Dienst erst nach einer erneuten Anmeldung (Neustart des Dienstes).
+              </p>
+            </div>
+          </details>
+          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
               Selbst entwickelter MCP-Client
             </summary>
             <p class="mt-3 text-[#6B6B8A] leading-relaxed">
@@ -191,7 +233,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
               Discovery via <code class="font-mono text-xs">{gatewayUrl}/.well-known/oauth-authorization-server</code>.
               Tokens sind RFC-9068-JWTs. Nach dem Login das JWT als
               <code class="font-mono text-xs">Authorization: Bearer …</code>
-              an <code class="font-mono text-xs">{gatewayUrl}/mcp</code> senden.
+              an <code class="font-mono text-xs">{`${gatewayUrl}/mcp/`}</code> senden.
             </p>
           </details>
         </div>
