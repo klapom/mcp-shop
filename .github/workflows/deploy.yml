@@ -77,3 +77,18 @@ jobs:
               *) echo "::error::unexpected status $code for $path"; exit 1 ;;
             esac
           done
+
+  # brain-Sprint H1 (klapom/ot-guru-brain, Plan #234, Klaus' Entscheidung K2, 2026-11-26): nach dem Deploy
+  # spielt brain die Kundenhilfe (Quickstart + Werkzeugliste) als source_type=service neu ein. Eigener Job:
+  # schlägt er fehl, bleibt der Shop live und der Index auf dem alten Stand (harter Abbruch, Generationen).
+  # Die Logik liegt ganz in brain; hier wird nur das Skript aufgerufen.
+  brain-service-index:
+    needs: deploy
+    runs-on: [self-hosted, linux, dgx]
+    env:
+      SERVICE_DIR: /home/admin/projects/mcp-shop/dist
+      XDG_RUNTIME_DIR: /run/user/1000
+      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1000/bus
+    steps:
+      - name: Kundenhilfe in brain einspielen
+        run: bash /home/admin/projects/ot-knowledge-mcp/pipeline/update_service_index.sh
