@@ -30,7 +30,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
       <section>
         <div class="flex items-start gap-4 mb-3">
           <div class="w-8 h-8 rounded-full bg-[#005F73] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
-          <h2 class="text-xl font-bold text-[#1A1A2E]">Trial starten</h2>
+          <h2 id="trial-starten" class="text-xl font-bold text-[#1A1A2E]">Trial starten</h2>
         </div>
         <div class="ml-12 text-sm text-[#6B6B8A] space-y-3">
           <p>
@@ -49,12 +49,12 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
       <section>
         <div class="flex items-start gap-4 mb-3">
           <div class="w-8 h-8 rounded-full bg-[#005F73] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
-          <h2 class="text-xl font-bold text-[#1A1A2E]">Client einrichten</h2>
+          <h2 id="client-einrichten" class="text-xl font-bold text-[#1A1A2E]">Client einrichten</h2>
         </div>
         <div class="ml-12 space-y-6">
           <!-- Claude Desktop -->
           <div>
-            <h3 class="font-semibold text-[#1A1A2E] mb-2">Claude Desktop (macOS / Windows)</h3>
+            <h3 id="claude-desktop" class="font-semibold text-[#1A1A2E] mb-2">Claude Desktop (macOS / Windows)</h3>
             <p class="text-sm text-[#6B6B8A] mb-2">
               Settings → Developer → Edit Config. Folgenden Block in
               <code class="font-mono text-xs bg-[#005F73]/5 text-[#005F73] px-1 rounded">claude_desktop_config.json</code> einfügen:
@@ -75,7 +75,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
 
           <!-- Claude Cowork -->
           <div>
-            <h3 class="font-semibold text-[#1A1A2E] mb-2">Claude im Browser (claude.ai, Claude Cowork)</h3>
+            <h3 id="claude-browser" class="font-semibold text-[#1A1A2E] mb-2">Claude im Browser (claude.ai, Claude Cowork)</h3>
             <p class="text-sm text-[#6B6B8A] mb-2">
               Einstellungen → Konnektoren → „Benutzerdefinierten Konnektor hinzufügen".
               Name frei wählbar, URL (mit Schrägstrich am Ende):
@@ -97,7 +97,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
 
           <!-- Copilot Studio -->
           <div>
-            <h3 class="font-semibold text-[#1A1A2E] mb-2">Microsoft Copilot Studio (M365 E7)</h3>
+            <h3 id="copilot-studio" class="font-semibold text-[#1A1A2E] mb-2">Microsoft Copilot Studio (M365 E7)</h3>
             <p class="text-sm text-[#6B6B8A] mb-2">
               Tools → MCP Servers → Add Server. Manifest-URL:
             </p>
@@ -114,7 +114,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
       <section>
         <div class="flex items-start gap-4 mb-3">
           <div class="w-8 h-8 rounded-full bg-[#005F73] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
-          <h2 class="text-xl font-bold text-[#1A1A2E]">Erstes Tool aufrufen</h2>
+          <h2 id="erstes-tool" class="text-xl font-bold text-[#1A1A2E]">Erstes Tool aufrufen</h2>
         </div>
         <div class="ml-12 text-sm text-[#6B6B8A] space-y-3">
           <p>Im Chat-Fenster einfach fragen — der Client wählt das passende Tool automatisch:</p>
@@ -133,7 +133,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
       <section>
         <div class="flex items-start gap-4 mb-3">
           <div class="w-8 h-8 rounded-full bg-[#005F73] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">4</div>
-          <h2 class="text-xl font-bold text-[#1A1A2E]">Tool-Naming verstehen</h2>
+          <h2 id="tool-naming" class="text-xl font-bold text-[#1A1A2E]">Tool-Naming verstehen</h2>
         </div>
         <div class="ml-12 text-sm text-[#6B6B8A] space-y-3">
           <p>
@@ -157,9 +157,9 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
 
       <!-- Troubleshooting -->
       <section>
-        <h2 class="text-xl font-bold text-[#1A1A2E] mb-4">Troubleshooting</h2>
+        <h2 id="troubleshooting" class="text-xl font-bold text-[#1A1A2E] mb-4">Troubleshooting</h2>
         <div class="space-y-4 text-sm">
-          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+          <details id="ts-tool-result" class="bg-white border border-[#F4F4F8] rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
               Client zeigt „Tool result could not be submitted. Refresh the page"
             </summary>
@@ -170,7 +170,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
               einmal trennen und neu verbinden.
             </p>
           </details>
-          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+          <details id="ts-standortiq-timeout" class="bg-white border border-[#F4F4F8] rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
               StandortIQ-Calls timen aus
             </summary>
@@ -181,7 +181,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
               Timeout setzt, müsste der dort hochgesetzt werden.
             </p>
           </details>
-          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+          <details id="ts-403" class="bg-white border border-[#F4F4F8] rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
               „403 forbidden" bei Tool-Aufruf
             </summary>
@@ -191,7 +191,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
               prüfen, ob die TenantProduct-Row für den Namespace open ist.
             </p>
           </details>
-          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+          <details id="ts-neues-produkt" class="bg-white border border-[#F4F4F8] rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
               Neu gekauftes Produkt erscheint nicht im Konnektor
             </summary>
@@ -211,7 +211,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
               </p>
             </div>
           </details>
-          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+          <details id="ts-nicht-gefunden-307" class="bg-white border border-[#F4F4F8] rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
               Konnektor-Prüfung in claude.ai meldet „Nicht gefunden" bzw. „307"
             </summary>
@@ -221,7 +221,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
               <code class="font-mono text-xs">{`${gatewayUrl}/mcp/`}</code> neu anlegen.
             </p>
           </details>
-          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+          <details id="ts-ot-vor-ort" class="bg-white border border-[#F4F4F8] rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
               OMNITRACKER vor Ort (OT-GURU-Connect): „no 'read'-privilege" oder fehlende Daten
             </summary>
@@ -244,7 +244,7 @@ const gatewayUrl = import.meta.env.GATEWAY_URL ?? "https://mcp.pommerconsulting.
               </p>
             </div>
           </details>
-          <details class="bg-white border border-[#F4F4F8] rounded-lg p-4">
+          <details id="ts-eigener-client" class="bg-white border border-[#F4F4F8] rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-[#1A1A2E]">
               Selbst entwickelter MCP-Client
             </summary>
